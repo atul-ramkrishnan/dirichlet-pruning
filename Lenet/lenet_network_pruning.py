@@ -22,8 +22,11 @@ import argparse
 # PARAMS
 
 arguments=argparse.ArgumentParser()
+# Number of channels/neurons to keep. Discard the rest.
 arguments.add_argument("--arch", default="8,20,50,20") #10,20,500,800
 arguments.add_argument("--folder")
+# Switch_integral and switch_point differ in how they calculate the loss. Switch_integral uses sampling while switch_point uses the analytic mean.
+# Shapley ranking ==> Shapley values
 arguments.add_argument("--method", default="shapley") #shap, switch_itegral, swithc_point, fisher, l1, l2, random
 arguments.add_argument("--switch_samps", default=150, type=int)
 arguments.add_argument("--switch_comb", default='train') #train, load
@@ -193,8 +196,8 @@ def evaluate(net=net, evaluation="test"):
 
 
 
-############################3
-#
+############################
+# Train the model (works for original and compressed).
 
 def train(thresh=[-1,-1,-1,-1]):
     # here retraining works
@@ -262,6 +265,7 @@ def train(thresh=[-1,-1,-1,-1]):
     accuracy = evaluate()
 
 
+# Only for Fisher.
 
 def finetune(net_finetune=net):
 
@@ -269,12 +273,13 @@ def finetune(net_finetune=net):
     net_finetune.train()
 
     dataiter = iter(train_loader)
-
+    # Train for only 100 minibatches. Why?
     for i in range(0, 100):
 
         try:
             input, target = dataiter.next()
         except StopIteration:
+            # If we reach the end of the dataset before reaching 100 minibatches, start again from the top.
             dataiter = iter(train_loader)
             input, target = dataiter.next()
 
@@ -294,6 +299,7 @@ def finetune(net_finetune=net):
 #input : method, path to the model we want to rank
 #output : rank (list of four numpy arrays, one for each layer)
 
+# Trains (or loads) the importance switches.
 
 def get_ranks(method, path_checkpoint):
     print(f"Ranking method {method}")
@@ -402,6 +408,7 @@ def threshold_prune_and_retrain(combinationss, thresh):
     the ranks are sorted from best to worst
     thresh is what we keep, combinationss is what we discard
     '''
+    # What does this do? Seems dubious. The stable version does not have this.
     combinationss=combinationss[0]
     for i in range(len(combinationss)):
         combinationss[i] = torch.LongTensor(combinationss[i][thresh[i]:].copy())
@@ -414,6 +421,8 @@ def threshold_prune_and_retrain(combinationss, thresh):
     if prune_bool:
         def zero_param():
             it = 0
+            # Layer iterator, I think. We have importance switches for every layer. combinationss[i] gets the switch vector for layer i.
+            # We increment it every time we see either a Conv layer or FC layer.
             for name, param in net.named_parameters():
                 #print(name)
                 if (("c" in name) or ("f" in name)) and ("weight" in name):
@@ -438,13 +447,16 @@ def threshold_prune_and_retrain(combinationss, thresh):
 
     #####################################################################
     # RETRAIN
-
+    # Clear gradients of importance switches after every backward pass.
+    # Similar to optimizer.zero_grad()
     print("Gradient")
     if retrain:
         def gradi_new(combs_num):
             def hook(module):
                 module[combinationss[combs_num]] = 0
             return hook
+
+        # Backward hooks
         net.c1.weight.register_hook(gradi_new(0))
         net.c1.bias.register_hook(gradi_new(0))
         net.bn1.weight.register_hook(gradi_new(0))

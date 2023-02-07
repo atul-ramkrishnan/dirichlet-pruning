@@ -1,3 +1,7 @@
+# Dirichlet pruning for neural network compression.
+## Why I think this is a better use case than "Neural network regression" -- In the first paper, let's take the transfer learning example, the target is a probability simplex as a result of the application of softmax. On testing the covariance, I found out that the covariance matrix was entirely negative. The Dirichlet model is trained on this output, i.e. the target probability simplex itself doesn't have positive covariance. 
+## Whereas in Dirichlet pruning, the probability simplex can be anything. There is no such restriction. Note that due to the nature of the probability simplex, where the sum of the RVs have to be 1, it is expected that the covariance is mostly negative. But it is still "theoretically" possible for there to be positive covariance, unlike the previous paper.
+
 ### Lenet
 
 #### 1. First train the model

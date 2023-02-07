@@ -110,6 +110,7 @@ class Lenet(nn.Module):
         self.parameter = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
         self.num_samps_for_switch = num_samps_for_switch
 
+    # Switch function for Conv layers
     def switch_func(self, output, SstackT):
         rep = SstackT.unsqueeze(2).unsqueeze(2).repeat(1, 1, output.shape[2], output.shape[3])  # (150,10,24,24)
         # output is (100,10,24,24), we want to have 100,150,10,24,24, I guess
@@ -117,6 +118,7 @@ class Lenet(nn.Module):
         output = output.view(output.shape[0] * output.shape[1], output.shape[2], output.shape[3], output.shape[4])
         return output, SstackT
 
+    # Switch function for Fully-Connected layers. But why use this for c5?
     def switch_func_fc(self, output, SstackT):
 
         #rep = SstackT.unsqueeze(2).unsqueeze(2).repeat(1, 1,)  # (150,10,24,24)
@@ -225,6 +227,7 @@ class Lenet(nn.Module):
         output = self.f7(output)
 
         output = output.reshape(BATCH_SIZE, self.num_samps_for_switch, -1)
+        # Mean over num of samples for switch
         output = torch.mean(output, 1)
 
 
@@ -335,7 +338,7 @@ def evaluate(net2, layer):
 # LOSS
 
 
-
+# This loss is the first part of the loss function in equation (7). Note that criterion is cross_entropy and note binary_cross_entropy.
 def loss_function(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps):
     # BCE = f.binary_cross_entropy(prediction, true_y, reduction='sum')
     BCE = criterion(prediction, true_y)
@@ -345,6 +348,7 @@ def loss_function(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps):
 
 ###########################
 
+# This loss is the second part of the loss function in equation (7). This will be different for Generalized Dirichlet.
 def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, annealing_rate):
     # BCE = F.binary_cross_entropy(prediction, true_y, reduction='mean')
     BCE = criterion(prediction, true_y)
