@@ -26,6 +26,10 @@ python lenet_network_pruning.py --method shapley --shap_method kernel --shap_sam
 python lenet_network_pruning.py --method shapley --shap_method kernel --shap_sample_num 30 --path_checkpoint_load checkpoint/scratch/mnist/mnist_trainval_0.8_epo_376_acc_99.05 --load_file 0 --resume 1 --prune_bool 1 --retrain 1
 ```
 
+#### 4. To retrain a pruned model:
+```
+python lenet_network_pruning.py --method shapley --shap_method kernel --shap_sample_num 30 --path_checkpoint_load checkpoint/scratch/mnist/mnist_trainval_0.8_epo_376_acc_99.05 --load_file 0 --resume 1 --prune_bool 0 --retrain 1
+```
 
 Notes:
 
