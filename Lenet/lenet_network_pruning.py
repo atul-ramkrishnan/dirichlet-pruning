@@ -408,8 +408,8 @@ def threshold_prune_and_retrain(combinationss, thresh):
     the ranks are sorted from best to worst
     thresh is what we keep, combinationss is what we discard
     '''
-    # What does this do? Seems dubious. The stable version does not have this.
-    combinationss=combinationss[0]
+    # What does this do? Seems dubious. The stable version does not have this. Commented it out for now.
+    # combinationss=combinationss[0]
     for i in range(len(combinationss)):
         combinationss[i] = torch.LongTensor(combinationss[i][thresh[i]:].copy())
     print("\n\nPrunedto:%d_%d_%d_%d\n" % (thresh[0], thresh[1], thresh[2], thresh[3]))
