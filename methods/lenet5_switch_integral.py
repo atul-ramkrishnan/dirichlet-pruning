@@ -358,6 +358,7 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
         print("alpha_0", alpha_0)
         print("layer", layer)
         print("hidden_dim", hidden_dim)
+        print("S.shape", S.shape)
     alpha_0 = torch.Tensor([alpha_0]).to(device)
     hidden_dim = torch.Tensor([hidden_dim]).to(device)
     trm1 = torch.lgamma(torch.sum(S)) - torch.lgamma(hidden_dim * alpha_0)
