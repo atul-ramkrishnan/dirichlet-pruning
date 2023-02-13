@@ -346,7 +346,7 @@ def get_ranks(method, path_checkpoint):
         file_path=os.path.join(path_main, 'results_switch/results/switch_data_%s_9927_integral_samps_%s_epochs_%i.npy' % (dataset, str(num_samps_for_switch), epochs_num))
         if getranks_method=='train':
             for layer in ["c1", "c3", "c5", "f6"]:
-                best_accuracy, epoch, best_model, S= run_experiment_integral(epochs_num, layer, 10, 20, 100, 25, num_samps_for_switch, path)
+                best_accuracy, epoch, best_model, S = run_experiment_integral(epochs_num, layer, 10, 20, 100, 25, num_samps_for_switch, path_checkpoint)
                 print("Rank for switches from most important/largest to smallest after %s " %  str(epochs_num))
                 print(S)
                 print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
