@@ -53,7 +53,7 @@ hidden_dim = 10 #it's a number of parameters we want to estimate, e.g. # conv1 f
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
 hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
 num_samps_for_switch = 5
-
+verbose = True                  # Print additional info
 ###################################################
 # DATA
 
@@ -354,6 +354,10 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     BCE = criterion(prediction, true_y)
 
     # KLD term
+    if verbose:
+        print("alpha_0", alpha_0)
+        print("layer", layer)
+        print("hidden_dim", hidden_dim)
     alpha_0 = torch.Tensor([alpha_0]).to(device)
     hidden_dim = torch.Tensor([hidden_dim]).to(device)
     trm1 = torch.lgamma(torch.sum(S)) - torch.lgamma(hidden_dim * alpha_0)
@@ -364,7 +368,9 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
 
     return BCE + annealing_rate * KLD / how_many_samps
 
-
+# KL-divergence between two Generalized Dirichlet distributions
+def loss_functionKL_GD():
+    pass
 
 
 
