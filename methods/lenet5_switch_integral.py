@@ -49,9 +49,9 @@ how_many_epochs=200
 annealing_steps = float(8000. * how_many_epochs)
 beta_func = lambda s: min(s, annealing_steps) / annealing_steps
 alpha_0 = 2  # below 1 so that we encourage sparsity
-hidden_dim = 10 #it's a number of parameters we want to estimate, e.g. # conv1 filters
+# hidden_dim = 10 #it's a number of parameters we want to estimate, e.g. # conv1 filters
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
-hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
+# hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
 num_samps_for_switch = 5
 verbose = False                  # Print additional info
 ###################################################
@@ -369,9 +369,24 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
 
     return BCE + annealing_rate * KLD / how_many_samps
 
-# KL-divergence between two Generalized Dirichlet distributions
-def loss_functionKL_GD():
-    pass
+# KL-divergence between two Generalized Dirichlet distributions. Cannot do D * alpha_0 / beta_0 as sum includes other terms.
+# Instead create a tensor filled with alpha_0 / beta_0 value of size phi_alpha / phi_beta
+def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0, how_many_samps, annealing_rate):
+    CE = criterion(prediction, true_y)
+
+    # alpha_0 = torch.Tensor([alpha_0]).to(device)
+    alpha_0 = torch.full_like(phi_alpha, alpha_0)
+    beta_0 = torch.full_like(phi_beta, beta_0)
+    firstTerm = torch.sum(torch.lgamma(phi_alpha + phi_beta) - torch.lgamma(phi_alpha) - torch.lgamma(phi_beta), dim=1)
+    secondTerm =  torch.sum(torch.lgamma(alpha_0 + beta_0) - torch.lgamma(alpha_0) - torch.lgamma(beta_0), dim=1)
+    thirdTerm = torch.sum((phi_alpha - alpha_0) * (torch.digamma(phi_alpha) - torch.digamma(phi_alpha + phi_beta)) +
+                      (phi_beta - beta_0) * (torch.digamma(phi_beta) - torch.digamma(phi_alpha + phi_beta)), dim=1)
+
+    KLD = torch.sum(firstTerm - secondTerm + thirdTerm)
+
+    return CE + annealing_rate * KLD / how_many_samps
+
+
 
 
 
@@ -440,6 +455,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             outputs, S=net2(inputs, layer) #when switc hes
             #outputs=net2(inputs)
             #loss=criterion(outputs, labels)
+            hidden_dim = hidden_dims[layer]
             loss = loss_functionKL(outputs, labels, S, alpha_0, hidden_dim, BATCH_SIZE, annealing_rate)
             #loss=loss_function(outputs, labels, 1, 1, 1, 1)
             loss.backward()
