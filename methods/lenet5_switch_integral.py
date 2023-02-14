@@ -33,7 +33,7 @@ import pdb
 import os
 
 from torch.nn.parameter import Parameter
-from torch.distributions import Gamma
+from torch.distributions import Gamma, Beta
 
 
 device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -49,6 +49,7 @@ how_many_epochs=200
 annealing_steps = float(8000. * how_many_epochs)
 beta_func = lambda s: min(s, annealing_steps) / annealing_steps
 alpha_0 = 2  # below 1 so that we encourage sparsity
+beta_0 = 2   # Only for Generalized Dirichlet
 # hidden_dim = 10 #it's a number of parameters we want to estimate, e.g. # conv1 filters
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
 # hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
@@ -107,7 +108,8 @@ class Lenet(nn.Module):
 
         self.drop_layer = nn.Dropout(p=0.5)
 
-        self.parameter = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
+        self.parameter_alpha = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
+        self.parameter_beta = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True)
         self.num_samps_for_switch = num_samps_for_switch
 
     # Switch function for Conv layers
@@ -144,31 +146,46 @@ class Lenet(nn.Module):
 
 
         #############S
-        phi = f.softplus(self.parameter)
+        phi_alpha = f.softplus(self.parameter_alpha)
+        phi_beta = f.softplus(self.parameter_beta)
 
-        """ draw Gamma RVs using phi and 1 """
+        # """ draw Gamma RVs using phi and 1 """
+        # num_samps = self.num_samps_for_switch
+        # concentration_param = phi.view(-1, 1).repeat(1, num_samps).to(device) #[feat x samp]
+        # beta_param = torch.ones(concentration_param.size()).to(device)
+        # # Gamma has two parameters, concentration and beta, all of them are copied to 200,150 matrix
+        # Gamma_obj = Gamma(concentration_param, beta_param)
+        # gamma_samps = Gamma_obj.rsample()  # 200, 150, hidden_dim x samples_num
+
+        # if any(torch.sum(gamma_samps, 0) == 0):
+        #     print("sum of gamma samps are zero!")
+        # else:
+        #     Sstack = gamma_samps / torch.sum(gamma_samps, 0)  # 1dim - number of neurons (200), 2dim - samples (150)
+
+        # # Sstack -switch, for output of the network (say 200) we used to have switch 200, now we have samples (150 of them), sowe have switch which is (200, 150)        #
+
+        # # output.shape
+        # # Out[2]: torch.Size([100, 10, 24, 24])
+        # # Sstack.shape
+        # # Out[3]: torch.Size([10, 150])
+
+        # SstackT=Sstack.t()
+
+        #<-------------------------------(START)GENERALIZED DIRICHLET IMPORTANCE SWITCH SAMPLING-------------------------->
         num_samps = self.num_samps_for_switch
-        concentration_param = phi.view(-1, 1).repeat(1, num_samps).to(device) #[feat x samp]
-        beta_param = torch.ones(concentration_param.size()).to(device)
-        # Gamma has two parameters, concentration and beta, all of them are copied to 200,150 matrix
-        Gamma_obj = Gamma(concentration_param, beta_param)
-        gamma_samps = Gamma_obj.rsample()  # 200, 150, hidden_dim x samples_num
+        alpha_param = phi_alpha.view(-1, 1).repeat(1, num_samps)
+        beta_param = phi_beta.view(-1, 1).repeat(1, num_samps)
+        d = alpha_param.shape[0]
 
-        if any(torch.sum(gamma_samps, 0) == 0):
-            print("sum of gamma samps are zero!")
-        else:
-            Sstack = gamma_samps / torch.sum(gamma_samps, 0)  # 1dim - number of neurons (200), 2dim - samples (150)
+        Beta_obj = Beta(alpha_param, beta_param)
+        Sstack = Beta_obj.rsample()
+        q = 0
+        for i in range(0, d):
+            Sstack[i, :] = Sstack[i, :] * (1 - q)
+            q += Sstack[i, :]
 
-        # Sstack -switch, for output of the network (say 200) we used to have switch 200, now we have samples (150 of them), sowe have switch which is (200, 150)        #
-
-        # output.shape
-        # Out[2]: torch.Size([100, 10, 24, 24])
-        # Sstack.shape
-        # Out[3]: torch.Size([10, 150])
-
-        SstackT=Sstack.t()
-
-
+        SstackT = Sstack.t()
+        #<--------------------------------(END)GENERALIZED DIRICHLET IMPORTANCE SWITCH SAMPLING---------------------------->
 
         #x_samps = torch.einsum("ij,jk -> ijk", (output, Sstack))
         #x_samps = F.relu(x_samps)
