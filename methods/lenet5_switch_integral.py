@@ -182,7 +182,7 @@ class Lenet(nn.Module):
         q = 0
         for i in range(0, d):
             Sstack[i, :] = Sstack[i, :] * (1 - q)
-            q += Sstack[i, :]
+            q = q + Sstack[i, :]
 
         SstackT = Sstack.t()
         #<--------------------------------(END)GENERALIZED DIRICHLET IMPORTANCE SWITCH SAMPLING---------------------------->
