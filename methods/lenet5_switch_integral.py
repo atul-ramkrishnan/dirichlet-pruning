@@ -394,12 +394,12 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0,
     # alpha_0 = torch.Tensor([alpha_0]).to(device)
     alpha_0 = torch.full_like(phi_alpha, alpha_0)
     beta_0 = torch.full_like(phi_beta, beta_0)
-    firstTerm = torch.sum(torch.lgamma(phi_alpha + phi_beta) - torch.lgamma(phi_alpha) - torch.lgamma(phi_beta), dim=1)
-    secondTerm =  torch.sum(torch.lgamma(alpha_0 + beta_0) - torch.lgamma(alpha_0) - torch.lgamma(beta_0), dim=1)
+    firstTerm = torch.sum(torch.lgamma(phi_alpha + phi_beta) - torch.lgamma(phi_alpha) - torch.lgamma(phi_beta))
+    secondTerm =  torch.sum(torch.lgamma(alpha_0 + beta_0) - torch.lgamma(alpha_0) - torch.lgamma(beta_0))
     thirdTerm = torch.sum((phi_alpha - alpha_0) * (torch.digamma(phi_alpha) - torch.digamma(phi_alpha + phi_beta)) +
-                      (phi_beta - beta_0) * (torch.digamma(phi_beta) - torch.digamma(phi_alpha + phi_beta)), dim=1)
+                      (phi_beta - beta_0) * (torch.digamma(phi_beta) - torch.digamma(phi_alpha + phi_beta)))
 
-    KLD = torch.sum(firstTerm - secondTerm + thirdTerm)
+    KLD = firstTerm - secondTerm + thirdTerm
 
     return CE + annealing_rate * KLD / how_many_samps
 
