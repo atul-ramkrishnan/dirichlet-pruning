@@ -179,7 +179,7 @@ class Lenet(nn.Module):
 
         Beta_obj = Beta(alpha_param, beta_param)
         Sstack = Beta_obj.rsample()
-        q = 0
+        q = torch.tensor(0)
         for i in range(0, d):
             Sstack[i, :] = Sstack[i, :] * (1 - q)
             q = q + Sstack[i, :]
