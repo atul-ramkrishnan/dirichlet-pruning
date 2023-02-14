@@ -248,7 +248,7 @@ class Lenet(nn.Module):
         output = torch.mean(output, 1)
 
 
-        return output, phi
+        return output, phi_alpha, phi_beta
 
 
 
@@ -469,11 +469,12 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs, S=net2(inputs, layer) #when switc hes
+            outputs, phi_alpha, phi_beta = net2(inputs, layer) #when switc hes
             #outputs=net2(inputs)
             #loss=criterion(outputs, labels)
             hidden_dim = hidden_dims[layer]
-            loss = loss_functionKL(outputs, labels, S, alpha_0, hidden_dim, BATCH_SIZE, annealing_rate)
+            # loss = loss_functionKL(outputs, labels, S, alpha_0, hidden_dim, BATCH_SIZE, annealing_rate)
+            loss = loss_functionKL_GD(outputs, labels, phi_alpha, phi_beta, alpha_0, beta_0, BATCH_SIZE, annealing_rate)
             #loss=loss_function(outputs, labels, 1, 1, 1, 1)
             loss.backward()
             #print(net2.c1.weight.grad[1, :])
