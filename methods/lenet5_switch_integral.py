@@ -392,8 +392,8 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0,
     CE = criterion(prediction, true_y)
 
     # alpha_0 = torch.Tensor([alpha_0]).to(device)
-    alpha_0 = torch.full_like(phi_alpha, alpha_0)
-    beta_0 = torch.full_like(phi_beta, beta_0)
+    alpha_0 = torch.full_like(phi_alpha, alpha_0).to(device)
+    beta_0 = torch.full_like(phi_beta, beta_0).to(device)
     firstTerm = torch.sum(torch.lgamma(phi_alpha + phi_beta) - torch.lgamma(phi_alpha) - torch.lgamma(phi_beta))
     secondTerm =  torch.sum(torch.lgamma(alpha_0 + beta_0) - torch.lgamma(alpha_0) - torch.lgamma(beta_0))
     thirdTerm = torch.sum((phi_alpha - alpha_0) * (torch.digamma(phi_alpha) - torch.digamma(phi_alpha + phi_beta)) +
