@@ -405,6 +405,10 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0,
     return CE + annealing_rate * KLD / how_many_samps
 
 
+def mean_GD(alpha, beta):
+    inner_prod = torch.cat((torch.tensor(1.).view(1), torch.cumprod(beta / (alpha + beta), 0)[:-1])).detach()
+    expectation = (alpha / (alpha + beta)) * inner_prod
+    return expectation
 
 
 
@@ -493,7 +497,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
         #     print(name)
         #     print(param[1])
 
-
+        S = mean_GD(phi_alpha, phi_beta)
         print("S")
         print(S)
         print(torch.argsort(S))
