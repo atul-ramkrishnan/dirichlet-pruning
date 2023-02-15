@@ -444,20 +444,21 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     accuracy=evaluate(net2, layer)
 
 
-    h = net2.c1.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.c3.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.c5.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.f6.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.c1.bias.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.c3.bias.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.c5.bias.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.f6.bias.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.bn1.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.bn1.bias.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.bn2.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.bn2.bias.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.f7.weight.register_hook(lambda grad: grad * 0)  # double the gradient
-    h = net2.f7.bias.register_hook(lambda grad: grad * 0)  # double the gradient
+    # Freezing the weights of the network while we're training the importance switches
+    h = net2.c1.weight.register_hook(lambda grad: grad * 0)
+    h = net2.c3.weight.register_hook(lambda grad: grad * 0)
+    h = net2.c5.weight.register_hook(lambda grad: grad * 0)
+    h = net2.f6.weight.register_hook(lambda grad: grad * 0)
+    h = net2.c1.bias.register_hook(lambda grad: grad * 0)
+    h = net2.c3.bias.register_hook(lambda grad: grad * 0)
+    h = net2.c5.bias.register_hook(lambda grad: grad * 0)
+    h = net2.f6.bias.register_hook(lambda grad: grad * 0)
+    h = net2.bn1.weight.register_hook(lambda grad: grad * 0)
+    h = net2.bn1.bias.register_hook(lambda grad: grad * 0)
+    h = net2.bn2.weight.register_hook(lambda grad: grad * 0)
+    h = net2.bn2.bias.register_hook(lambda grad: grad * 0)
+    h = net2.f7.weight.register_hook(lambda grad: grad * 0)
+    h = net2.f7.bias.register_hook(lambda grad: grad * 0)
 
     accuracy = evaluate(net2, layer)
 
