@@ -406,7 +406,7 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0,
 
 
 def mean_GD(alpha, beta):
-    inner_prod = torch.cat((torch.tensor(1.).view(1), torch.cumprod(beta / (alpha + beta), 0)[:-1])).detach()
+    inner_prod = torch.cat((torch.tensor(1., device=device).view(1), torch.cumprod(beta / (alpha + beta), 0)[:-1])).detach()
     expectation = (alpha / (alpha + beta)) * inner_prod
     return expectation
 
