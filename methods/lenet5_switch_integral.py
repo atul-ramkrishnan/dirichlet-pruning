@@ -182,7 +182,7 @@ class Lenet(nn.Module):
         q = torch.tensor(0)
         # Atul: TODO: Validate masked operations and maybe look for faster options.
         for i in range(0, d):
-            mask = torch.zeros(Sstack.shape, dtype=torch.bool)
+            mask = torch.zeros(Sstack.shape, dtype=torch.bool, device=device)
             mask[i, :] = True
             Sstack = Sstack.masked_scatter(mask, (Sstack[i, :] * (1 - q)).detach().clone())
             q = q + torch.masked_select(Sstack, mask)
