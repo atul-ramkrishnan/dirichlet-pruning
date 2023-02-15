@@ -102,6 +102,7 @@ from methods import shapley_rank
 #from lenet_network_pruning_withcombinations import compute_combinations_lenet
 #from lenet_network_pruning_withcombinations import get_data
 from methods.lenet5_switch_integral import run_experiment as run_experiment_integral
+from methods.lenet5_switch_integral_old import run_experiment as run_experiment_integral_old
 from methods.lenet5_switch_pointest import run_experiment as run_experiment_pointest
 from importlib.machinery import SourceFileLoader
 dataset_mnist = SourceFileLoader("module_mnist", "../dataloaders/dataset_mnist.py").load_module()
@@ -348,6 +349,32 @@ def get_ranks(method, path_checkpoint):
         if getranks_method=='train':
             for layer in ["c1", "c3", "c5", "f6"]:
                 best_accuracy, epoch, best_model, S = run_experiment_integral(epochs_num, layer, 10, 20, 100, 25, num_samps_for_switch, path_checkpoint)
+                print("Rank for switches from most important/largest to smallest after %s " %  str(epochs_num))
+                print(S)
+                print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
+                ranks_sorted = np.argsort(S.cpu().detach().numpy())[::-1]
+                print(",".join(map(str, ranks_sorted)))
+                switch_data['combinationss'].append(ranks_sorted); switch_data['switches'].append(S.cpu().detach().numpy())
+            print('*'*30)
+            print(switch_data['combinationss'])
+            combinationss=switch_data['combinationss']
+            np.save(file_path, switch_data)
+        elif getranks_method=='load':
+            combinationss=list(np.load(file_path,  allow_pickle=True).item()['combinationss'])
+    
+    # The original Switch integral method (Dirichlet)
+    elif method=="switch_integral_old":
+        #train or load
+        getranks_method = args.switch_comb
+        switch_data={}; switch_data['combinationss'] = []; switch_data['switches']=[]
+        num_samps_for_switch=args.switch_samps
+        print("integral evaluation")
+        epochs_num = 3
+        # Hardcoded. Fix later
+        file_path=os.path.join(path_main, 'methods/results/switch_data_%s_9927_integral_samps_%s_epochs_%i.npy' % (dataset, str(num_samps_for_switch), epochs_num))
+        if getranks_method=='train':
+            for layer in ["c1", "c3", "c5", "f6"]:
+                best_accuracy, epoch, best_model, S = run_experiment_integral_old(epochs_num, layer, 10, 20, 100, 25, num_samps_for_switch, path_checkpoint)
                 print("Rank for switches from most important/largest to smallest after %s " %  str(epochs_num))
                 print(S)
                 print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
