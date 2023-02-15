@@ -173,17 +173,19 @@ class Lenet(nn.Module):
 
         #<-------------------------------(START)GENERALIZED DIRICHLET IMPORTANCE SWITCH SAMPLING-------------------------->
         num_samps = self.num_samps_for_switch
-        alpha_param = phi_alpha.view(-1, 1).repeat(1, num_samps)
-        beta_param = phi_beta.view(-1, 1).repeat(1, num_samps)
+        alpha_param = phi_alpha.view(-1, 1).repeat(1, num_samps).to(device)
+        beta_param = phi_beta.view(-1, 1).repeat(1, num_samps).to(device)
         d = alpha_param.shape[0]
 
         Beta_obj = Beta(alpha_param, beta_param)
         Sstack = Beta_obj.rsample()
         q = torch.tensor(0)
+        # Atul: TODO: Validate masked operations and maybe look for faster options.
         for i in range(0, d):
-            Sstack[i, :] = Sstack[i, :] * (1 - q)
-            q = q + Sstack[i, :]
-
+            mask = torch.zeros(Sstack.shape, dtype=torch.bool)
+            mask[i, :] = True
+            Sstack = Sstack.masked_scatter(mask, (Sstack[i, :] * (1 - q)).detach().clone())
+            q = q + torch.masked_select(Sstack, mask)
         SstackT = Sstack.t()
         #<--------------------------------(END)GENERALIZED DIRICHLET IMPORTANCE SWITCH SAMPLING---------------------------->
 
@@ -391,7 +393,6 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
 def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0, how_many_samps, annealing_rate):
     CE = criterion(prediction, true_y)
 
-    # alpha_0 = torch.Tensor([alpha_0]).to(device)
     alpha_0 = torch.full_like(phi_alpha, alpha_0).to(device)
     beta_0 = torch.full_like(phi_beta, beta_0).to(device)
     firstTerm = torch.sum(torch.lgamma(phi_alpha + phi_beta) - torch.lgamma(phi_alpha) - torch.lgamma(phi_beta))
