@@ -48,8 +48,8 @@ layer="c1"
 how_many_epochs=200
 annealing_steps = float(8000. * how_many_epochs)
 beta_func = lambda s: min(s, annealing_steps) / annealing_steps
-alpha_0 = 2  # below 1 so that we encourage sparsity
-beta_0 = 2   # Only for Generalized Dirichlet
+alpha_0 = 1  # below 1 so that we encourage sparsity
+
 # hidden_dim = 10 #it's a number of parameters we want to estimate, e.g. # conv1 filters
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
 # hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
@@ -393,7 +393,9 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
 def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0, beta_0, how_many_samps, annealing_rate):
     CE = criterion(prediction, true_y)
 
-    alpha_0 = torch.full_like(phi_alpha, alpha_0).to(device)
+    alpha_0 = torch.full_like(phi_alpha, alpha_0, dtype=torch.float32).to(device)
+    n_dim = phi_alpha.shape[0]
+    beta = torch.tensor([(n_dim-i) * 1 for i in range(n_dim)], dtype=torch.float32).to(device)
     beta_0 = torch.full_like(phi_beta, beta_0).to(device)
     firstTerm = torch.sum(torch.lgamma(phi_alpha + phi_beta) - torch.lgamma(phi_alpha) - torch.lgamma(phi_beta))
     secondTerm =  torch.sum(torch.lgamma(alpha_0 + beta_0) - torch.lgamma(alpha_0) - torch.lgamma(beta_0))
@@ -410,7 +412,12 @@ def mean_GD(alpha, beta):
     expectation = (alpha / (alpha + beta)) * inner_prod
     return expectation
 
-
+# For testing
+def variance_GD(alpha, beta):
+    inner_prod = torch.cat((torch.tensor(1.).view(1), torch.cumprod((beta + 1) / (alpha + beta + 1), 0)[:-1])).detach()
+    mean = mean_GD(alpha, beta)
+    variance = mean * (((alpha + 1) / (alpha + beta + 1)) * inner_prod - mean)
+    return variance
 
 ###################################################
 # RUN TRAINING
