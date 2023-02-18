@@ -477,6 +477,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
         print("Epoch: ", epoch)
         annealing_rate = beta_func(epoch)
         net2.train()
+        print("Evaluate network before training")
         evaluate(net2, layer)
         for i, data in enumerate(train_loader):
             inputs, labels=data
@@ -504,6 +505,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             #    evaluate()
         #print (i)
         print ("Loss: ", loss.item())
+        print("Evaluate network after training")
         accuracy=evaluate(net2, layer)
         print ("Epoch " +str(epoch)+ " ended.")
         # for name, param in net2.named_parameters():
