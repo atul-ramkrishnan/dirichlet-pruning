@@ -429,8 +429,8 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0_param, h
         print("KL divergence", KLD)
         print("\n")
 
-    # return CE + annealing_rate * KLD / how_many_samps
-    return KLD
+    return CE + annealing_rate * KLD / how_many_samps
+    # return KLD
 
 def mean_Dirichlet(alpha):
     return alpha / torch.sum(alpha).detach()
