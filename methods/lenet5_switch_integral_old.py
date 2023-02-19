@@ -38,7 +38,7 @@ from torch.distributions import Gamma
 
 device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #device="cpu"
-
+verbose = True
 
 #############################
 # PARAMS
@@ -345,6 +345,9 @@ def loss_function(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps):
 
 ###########################
 
+def mean_Dirichlet(alpha):
+    return alpha / torch.sum(alpha).detach()
+
 def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, annealing_rate):
     # BCE = F.binary_cross_entropy(prediction, true_y, reduction='mean')
     BCE = criterion(prediction, true_y)
@@ -357,6 +360,17 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     trm3 = torch.sum((S - alpha_0) * (torch.digamma(S) - torch.digamma(torch.sum(S))))
     KLD = trm1 + trm2 + trm3
     # annealing kl-divergence term is better
+    if verbose:
+        print("<----------------------------------------------------------------------------->")
+        print("Prior alpha", alpha_0)
+        print("\n")
+        print("Posterior alpha", S)
+        print("\n")
+        print("Prior mean", mean_Dirichlet(alpha_0))
+        print("Posterior mean", mean_Dirichlet(S))
+        print("\n")
+        print("KL divergence", KLD)
+        print("\n")
 
     return BCE + annealing_rate * KLD / how_many_samps
 
