@@ -362,7 +362,7 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     # annealing kl-divergence term is better
     if verbose:
         print("<----------------------------------------------------------------------------->")
-        alpha_0_logging = torch.full_like(S, alpha_0.detach().cpu().numpy(), dtype=torch.float32).to(device)
+        alpha_0_logging = torch.full_like(S, alpha_0.item(), dtype=torch.float32).to(device)
         print("Prior alpha", alpha_0)
         print("\n")
         print("Posterior alpha", S)
