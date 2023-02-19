@@ -54,7 +54,7 @@ alpha_0_param = 1  # below 1 so that we encourage sparsity
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
 # hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
 num_samps_for_switch = 5
-verbose = True                  # Print additional info
+verbose = False                  # Print additional info
 ###################################################
 # DATA
 
