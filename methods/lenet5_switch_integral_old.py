@@ -363,11 +363,11 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     if verbose:
         print("<----------------------------------------------------------------------------->")
         alpha_0_logging = torch.full_like(S, alpha_0.item(), dtype=torch.float32).to(device)
-        print("Prior alpha", alpha_0)
+        print("Prior alpha", alpha_0_logging)
         print("\n")
         print("Posterior alpha", S)
         print("\n")
-        print("Prior mean", mean_Dirichlet(alpha_0))
+        print("Prior mean", mean_Dirichlet(alpha_0_logging))
         print("Posterior mean", mean_Dirichlet(S))
         print("\n")
         print("KL divergence", KLD)
