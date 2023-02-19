@@ -409,14 +409,17 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0_param, h
     KLD = firstTerm - secondTerm + thirdTerm
     
     if verbose:
+        print("<----------------------------------------------------------------------------->")
         print("Prior alpha", alpha_0)
         print("Prior beta", beta_0)
-
+        print("\n")
         print("Posterior alpha", phi_alpha)
         print("Posterior beta", phi_beta)
-
+        print("\n")
         print("Prior mean", mean_GD(alpha_0, beta_0))
         print("Posterior mean", mean_GD(phi_alpha, phi_beta))
+        print("\n")
+        print("KL divergence", KLD)
 
     return CE + annealing_rate * KLD / how_many_samps
 
