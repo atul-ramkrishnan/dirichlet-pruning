@@ -85,6 +85,9 @@ dataset="mnist"
 
 ##################
 
+def softplus_inverse(x):
+    return x + torch.log(-torch.expm1(-x))
+
 ##############################################################################
 # NETWORK (conv-conv-fc-fc)
 
@@ -108,8 +111,10 @@ class Lenet(nn.Module):
 
         self.drop_layer = nn.Dropout(p=0.5)
 
-        self.parameter_alpha = Parameter(-1*torch.rand(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
-        self.parameter_beta = Parameter(-1*torch.rand(hidden_dims[layer]),requires_grad=True)
+        self.parameter_alpha = Parameter(-1*torch.ones(hidden_dims[layer]), requires_grad=True) # this parameter lies #S
+        self.parameter_beta = Parameter(torch.tensor([softplus_inverse((hidden_dims[layer] - i) *  f.softplus(torch.tensor(-1.)))
+                                        for i in range(hidden_dims[layer])]),
+                                        requires_grad=True)
         self.num_samps_for_switch = num_samps_for_switch
 
     # Switch function for Conv layers
@@ -417,6 +422,7 @@ def variance_GD(alpha, beta):
     mean = mean_GD(alpha, beta)
     variance = mean * (((alpha + 1) / (alpha + beta + 1)) * inner_prod - mean)
     return variance
+
 
 ###################################################
 # RUN TRAINING
