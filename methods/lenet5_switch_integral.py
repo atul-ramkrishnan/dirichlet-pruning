@@ -378,11 +378,6 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     BCE = criterion(prediction, true_y)
 
     # KLD term
-    if verbose:
-        print("alpha_0", alpha_0)
-        print("layer", layer)
-        print("hidden_dim", hidden_dim)
-        print("S.shape", S.shape)
     alpha_0 = torch.Tensor([alpha_0]).to(device)
     hidden_dim = torch.Tensor([hidden_dim]).to(device)
     trm1 = torch.lgamma(torch.sum(S)) - torch.lgamma(hidden_dim * alpha_0)
@@ -390,6 +385,18 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     trm3 = torch.sum((S - alpha_0) * (torch.digamma(S) - torch.digamma(torch.sum(S))))
     KLD = trm1 + trm2 + trm3
     # annealing kl-divergence term is better
+
+    if verbose:
+        print("<----------------------------------------------------------------------------->")
+        print("Prior alpha", alpha_0)
+        print("\n")
+        print("Posterior alpha", S)
+        print("\n")
+        print("Prior mean", mean_Dirichlet(alpha_0))
+        print("Posterior mean", mean_Dirichlet(S))
+        print("\n")
+        print("KL divergence", KLD)
+        print("\n")
 
     return BCE + annealing_rate * KLD / how_many_samps
 
@@ -420,9 +427,12 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0_param, h
         print("Posterior mean", mean_GD(phi_alpha, phi_beta))
         print("\n")
         print("KL divergence", KLD)
+        print("\n")
 
     return CE + annealing_rate * KLD / how_many_samps
 
+def mean_Dirichlet(alpha):
+    return alpha / torch.sum(alpha).detach()
 
 def mean_GD(alpha, beta):
     inner_prod = torch.cat((torch.tensor(1., device=device).view(1), torch.cumprod(beta / (alpha + beta), 0)[:-1])).detach()
