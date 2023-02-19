@@ -374,7 +374,8 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
         print("\n")
 
     # return BCE + annealing_rate * KLD / how_many_samps
-    return KLD
+    return BCE
+    # return KLD
 
 
 
@@ -448,8 +449,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             loss = loss_functionKL(outputs, labels, S, alpha_0, hidden_dim, BATCH_SIZE, annealing_rate)
             #loss=loss_function(outputs, labels, 1, 1, 1, 1)
             loss.backward()
-            # print("net.parameter.grad:")
-            # print(net2.parameter.grad)
+            print("net2.parameter_alpha.grad", net2.parameter_alpha.grad)
             #print(net2.c1.weight.grad[1, :])
             #print(net2.c1.weight[1, :])
             optimizer.step()
