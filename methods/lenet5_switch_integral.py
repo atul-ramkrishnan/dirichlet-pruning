@@ -54,7 +54,7 @@ alpha_0_param = 1  # below 1 so that we encourage sparsity
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
 # hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
 num_samps_for_switch = 5
-verbose = False                  # Print additional info
+verbose = True                  # Print additional info
 ###################################################
 # DATA
 
@@ -407,6 +407,16 @@ def loss_functionKL_GD(prediction, true_y, phi_alpha, phi_beta, alpha_0_param, h
                       (phi_beta - beta_0) * (torch.digamma(phi_beta) - torch.digamma(phi_alpha + phi_beta)))
 
     KLD = firstTerm - secondTerm + thirdTerm
+    
+    if verbose:
+        print("Prior alpha", alpha_0)
+        print("Prior beta", beta_0)
+
+        print("Posterior alpha", phi_alpha)
+        print("Posterior beta", phi_beta)
+
+        print("Prior mean", mean_GD(alpha_0, beta_0))
+        print("Posterior mean", mean_GD(phi_alpha, phi_beta))
 
     return CE + annealing_rate * KLD / how_many_samps
 
