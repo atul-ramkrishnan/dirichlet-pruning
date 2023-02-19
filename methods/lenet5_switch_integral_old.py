@@ -373,7 +373,8 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
         print("KL divergence", KLD)
         print("\n")
 
-    return BCE + annealing_rate * KLD / how_many_samps
+    # return BCE + annealing_rate * KLD / how_many_samps
+    return KLD
 
 
 
