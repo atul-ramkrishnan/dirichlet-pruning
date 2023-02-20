@@ -189,7 +189,7 @@ class Lenet(nn.Module):
         for i in range(0, d):
             mask = torch.zeros(Sstack.shape, dtype=torch.bool, device=device)
             mask[i, :] = True
-            Sstack = Sstack.masked_scatter(mask, (Sstack[i, :] * (1 - q)).detach().clone())
+            Sstack = Sstack.masked_scatter(mask, (Sstack[i, :] * (1 - q)))
             q = q + torch.masked_select(Sstack, mask)
         SstackT = Sstack.t()
         #<--------------------------------(END)GENERALIZED DIRICHLET IMPORTANCE SWITCH SAMPLING---------------------------->
@@ -525,8 +525,8 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             # print("phi_alpha: ", phi_alpha)
             # print("phi_beta: ", phi_beta)
             # print("mean: ", mean_GD(phi_alpha, phi_beta))
-            print("net2.parameter_alpha.grad", net2.parameter_alpha.grad)
-            print("net2.parameter_beta.grad", net2.parameter_beta.grad)
+            # print("net2.parameter_alpha.grad", net2.parameter_alpha.grad)
+            # print("net2.parameter_beta.grad", net2.parameter_beta.grad)
             #print(net2.c1.weight.grad[1, :])
             #print(net2.c1.weight[1, :])
             optimizer.step()
