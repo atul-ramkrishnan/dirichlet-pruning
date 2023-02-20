@@ -68,7 +68,7 @@ dataset=args.dataset
 os.makedirs(args.path_checkpoint_save, exist_ok=True)
 path_checkpoint_save_scratch= os.path.join(args.path_checkpoint_save, "scratch", dataset)
 os.makedirs(path_checkpoint_save_scratch, exist_ok=True)
-path_checkpoint_save_retrain = os.path.join(args.path_checkpoint_save, "prune_and_retrain/{method}", dataset)
+path_checkpoint_save_retrain = os.path.join(args.path_checkpoint_save, "prune_and_retrain", args.method, dataset)
 os.makedirs(path_checkpoint_save_retrain, exist_ok=True)
 
 ######################### p
