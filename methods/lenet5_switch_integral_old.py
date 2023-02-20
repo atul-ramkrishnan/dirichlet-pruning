@@ -482,7 +482,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             entry[2]=1
             best_model=net2.state_dict()
             best_optim=optimizer.state_dict()
-            torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "./checkpoint/retrain/switch_integral/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
+            torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "./checkpoint/prune_and_retrain/prune/switch_integral_old/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
         print("\n")
         #write
         # entry[0]=accuracy; entry[1]=loss
