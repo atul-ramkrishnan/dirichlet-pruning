@@ -246,7 +246,7 @@ def train(thresh=[-1,-1,-1,-1]):
             if save:
                 if best_accuracy > save_accuracy:
                     if retrain:
-                        save_path = f"{path_checkpoint_save_retrain}_retrained_epo_{epoch}_prunedto_{thresh[0]}_{thresh[1]}_{thresh[2]}_{thresh[3]}_acc_{best_accuracy}"
+                        save_path = f"{path_checkpoint_save_retrain}_{method}_retrained_epo_{epoch}_prunedto_{thresh[0]}_{thresh[1]}_{thresh[2]}_{thresh[3]}_acc_{best_accuracy}"
                         torch.save({'model_state_dict': best_model, 'optimizer_state_dict': best_optim}, save_path)
                         print(f"Saving checkpoint to {save_path}")
                     else:
