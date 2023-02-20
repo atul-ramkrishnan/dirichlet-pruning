@@ -68,7 +68,7 @@ dataset=args.dataset
 os.makedirs(args.path_checkpoint_save, exist_ok=True)
 path_checkpoint_save_scratch= os.path.join(args.path_checkpoint_save, "scratch", dataset)
 os.makedirs(path_checkpoint_save_scratch, exist_ok=True)
-path_checkpoint_save_retrain = os.path.join(args.path_checkpoint_save, "prune_and_retrain", args.method, dataset)
+path_checkpoint_save_retrain = os.path.join(args.path_checkpoint_save, dataset, args.method, "prune_and_retrain", "retrain", "")
 os.makedirs(path_checkpoint_save_retrain, exist_ok=True)
 
 ######################### p
@@ -246,7 +246,7 @@ def train(thresh=[-1,-1,-1,-1]):
             if save:
                 if best_accuracy > save_accuracy:
                     if retrain:
-                        save_path = f"{path_checkpoint_save_retrain}_retrained_epo_{epoch}_prunedto_{thresh[0]}_{thresh[1]}_{thresh[2]}_{thresh[3]}_acc_{best_accuracy}"
+                        save_path = f"{path_checkpoint_save_retrain}retrained_epoch_{epoch}_prunedto_{thresh[0]}_{thresh[1]}_{thresh[2]}_{thresh[3]}_best_acc_{best_accuracy}"
                         torch.save({'model_state_dict': best_model, 'optimizer_state_dict': best_optim}, save_path)
                         print(f"Saving checkpoint to {save_path}")
                     else:
