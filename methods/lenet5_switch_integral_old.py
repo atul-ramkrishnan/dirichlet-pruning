@@ -38,7 +38,7 @@ from torch.distributions import Gamma
 
 device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #device="cpu"
-verbose = True
+verbose = False
 
 #############################
 # PARAMS
