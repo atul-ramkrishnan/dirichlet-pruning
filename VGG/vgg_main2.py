@@ -35,8 +35,6 @@ dataset_cifar = SourceFileLoader("module_cifar", "../dataloaders/dataset_cifar.p
 model_lenet5 = SourceFileLoader("module_vgg", "../models/vgg.py").load_module()
 from module_cifar import load_cifar
 from methods.script_vgg_vggswitch import switch_run as script_vgg
-from methods import shapley_rank
-
 
 
 #######
@@ -46,8 +44,7 @@ cwd = os.getcwd()
 if 'g0' in socket.gethostname() or 'p0' in socket.gethostname():
     #the cwd is where the sub file is so ranking/
     sys.path.append(os.path.join(cwd, "results_switch"))
-    path_compression = cwd
-    #path_compression = os.path.join(cwd, "results_compression")
+    path_compression = os.path.join(cwd, "results_compression")
     path_networktest = os.path.join(cwd, "results_networktest")
     path_switch = os.path.join(cwd, "results_switch")
     path_main= cwd
@@ -74,33 +71,23 @@ parser.add_argument("--arch", default='25,25,65,80,201,158,159,460,450,490,470,4
 #parser.add_argument("--arch", default='25,25,65,80,201,158,159,460,450,490,470,465,465,450')
 # ar.add_argument("-arch", default=[21,20,65,80,201,147,148,458,436,477,454,448,445,467,441])
 parser.add_argument('--layer', help="layer to prune", default="c1")
-parser.add_argument("--method", default='shapley') #switch, l1, l2
-parser.add_argument("--dataset", default="cifar")
-parser.add_argument("--trainval_perc", default=0.8, type=float)
-
+parser.add_argument("--method", default='switch') #switch, l1, l2
 #Dirichlet
 parser.add_argument("--switch_samps", default=3, type=int)
 parser.add_argument("--switch_epochs", default=1, type=int)
 parser.add_argument("--ranks_method", default='point') #point, integral
 parser.add_argument("--switch_trainranks", action='store_true')
-#shapley
-parser.add_argument("--shap_method", default="random")
-parser.add_argument("--load_file", default=1, type=int)
-parser.add_argument("--k_num", default=None)
-parser.add_argument("--shap_sample_num", default=10, type=int)
 #general
-parser.add_argument("--resume", default=1)
-parser.add_argument("--prune_bool", default=1)
-parser.add_argument("--retrain_bool", default=1)
-parser.add_argument("--model", default="None")
+parser.add_argument("--resume", action='store_true')
+parser.add_argument("--prune_bool", action='store_true')
+parser.add_argument("--retrain_bool", action='store_true')
+parser.add_argument("--model", default=None)
 # parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
-save_accuracy=65.0
-print(f"Save accuracy: {save_accuracy}\n")
-os.makedirs("checkpoint", exist_ok=True)
+save_accuracy=91.0
+
 args = parser.parse_args()
 print(args)
 #print(args.layer)
-print(torch.cuda.get_device_name(torch.cuda.current_device()))
 
 
 ################################################################################################
@@ -419,7 +406,7 @@ class VGG(nn.Module):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
-trainloader, testloader, valloader = load_cifar(args.trainval_perc)
+trainloader, testloader, valloader = load_cifar()
 
 ###################################################
 # MAKE AN INSTANCE OF A NETWORK AND (POSSIBLY) LOAD THE MODEL
@@ -526,7 +513,7 @@ def test(dataset):
     test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
     return 100.0 * float(correct) / total
 
-def testval(net=net, mode="val"):
+def testval():
     # for name, param in net.named_parameters():
     #     print (name)
     #     print (param)
@@ -536,14 +523,8 @@ def testval(net=net, mode="val"):
     test_loss = 0
     correct = 0
     total = 0
-    if mode == "val":
-        evalloader = valloader
-    else:
-        evalloader = testloader
-    print(f"Evaluating on {mode} dataset")
-
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(evalloader):
+        for batch_idx, (inputs, targets) in enumerate(valloader):
             inputs, targets = inputs.to(device), targets.to(device)
             # outputs = net(inputs, batch_idx) #VISU
             outputs = net(inputs)
@@ -582,16 +563,16 @@ def save_checkpoint(epoch, acc, best_acc, remaining=0):
     # Save checkpoint.
     # acc = test(epoch)
     if acc > best_acc:
+        print('Saving..')
         state = {'net': net.state_dict(), 'acc': acc, 'epoch': epoch}
         print("acc: ", acc)
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
         if acc > save_accuracy:
-            print(f'Saving.. to {path_compression}/checkpoint/')
             if remaining == 0:  # regular training
-                torch.save(state, path_compression+'/checkpoint/ckpt_vgg16_trainval_{}_acc_{}.t7'.format(args.trainval_perc, acc))
+                torch.save(state, path_compression+'/checkpoint/ckpt_vgg16_{}.t7'.format(acc))
             else:
-                torch.save(state, path_compression+'/checkpoint/ckpt_vgg16_prunedto{}_acc_{}.t7'.format(remaining, acc))
+                torch.save(state, path_compression+'/checkpoint/ckpt_vgg16_prunedto{}_{}.t7'.format(remaining, acc))
         best_acc = acc
     return best_acc
 
@@ -644,7 +625,6 @@ def prune_and_retrain(thresh):
                 # these numbers from the beginning will be cut off, meaning the worse will be cut off
             for i in range(len(combinationss)):
                 combinationss[i] = torch.LongTensor(combinationss[i][thresh[i]:].copy())
-
         #################################################################
         elif method == 'l1' or method == 'l2':
             magnitude_rank.setup()
@@ -653,18 +633,7 @@ def prune_and_retrain(thresh):
             for i in range(len(combinationss)):
                 combinationss[i] = torch.LongTensor(combinationss[i][:thresh[i]].copy())
             print(combinationss[1])
-
-        ###############
-        elif method == 'shapley':
-            try:
-                combinationss = shapley_rank.shapley_rank(testval, net, "VGG", os.path.split(model2load)[1], args.dataset, args.load_file, args.k_num, args.shap_method, args.shap_sample_num)
-            except KeyboardInterrupt:
-                print('Interrupted')
-                shapley_rank.file_check()
-                try:
-                    sys.exit(0)
-                except SystemExit:
-                    os._exit(0) ####################################################################
+        ####################################################################
         elif method == 'fisher':
             # in the process of finetuning we accumulate the gradient information that w eadd for each batch. We use this gradient info for constructing a ranking.
             net.module.reset_fisher()
@@ -686,28 +655,20 @@ def prune_and_retrain(thresh):
 
         #############
         # PRUNE
-
-        def zero_params():
-            it = 0
-            for name, param in net.state_dict().items():
-                # print(name, param.shape)
-                if "module.c" in name and "weight" in name:
-                    it += 1
-                    param.data[combinationss[it - 1]] = 0
-                    # print(param.data)
-                if "module.c" in name and "bias" in name:
-                    param.data[combinationss[it - 1]] = 0
-                    # print(param.data)
-                if ("bn" in name) and ("weight" in name):
-                    param.data[combinationss[it - 1]] = 0
-                if ("bn" in name) and ("bias" in name):
-                    param.data[combinationss[it - 1]] = 0
-                if ("bn" in name) and ("running_mean" in name):
-                    param.data[combinationss[it - 1]] = 0
-                if ("bn" in name) and ("running_var" in name):
-                    param.data[combinationss[it - 1]] = 0
-
-        zero_params()
+        it = 0
+        for name, param in net.named_parameters():
+            # print(name, param.shape)
+            if "module.c" in name and "weight" in name:
+                it += 1
+                param.data[combinationss[it - 1]] = 0
+                # print(param.data)
+            if "module.c" in name and "bias" in name:
+                param.data[combinationss[it - 1]] = 0
+                # print(param.data)
+            if ("bn" in name) and ("weight" in name):
+                param.data[combinationss[it - 1]] = 0
+            if ("bn" in name) and ("bias" in name):
+                param.data[combinationss[it - 1]] = 0
 
         print("After pruning")
         test(-1)
@@ -802,10 +763,6 @@ def prune_and_retrain(thresh):
                 optimizer.step()
                 # net.c1.weight.data[1] = 0  # instead of hook
                 # net.c1.bias.data[1] = 0  # instead of hook
-
-                if args.prune:
-                    zero_params()
-
             print(loss.item())
             accuracy = test(-1)
             # print(net.module.c2.weight.data)

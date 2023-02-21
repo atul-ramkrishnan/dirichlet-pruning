@@ -111,12 +111,12 @@ class Lenet(nn.Module):
 
         self.drop_layer = nn.Dropout(p=0.5)
 
-        # self.parameter_alpha = Parameter(-1*torch.ones(hidden_dims[layer]), requires_grad=True) # this parameter lies #S
-        # self.parameter_beta = Parameter(torch.tensor([softplus_inverse((hidden_dims[layer] - i) *  f.softplus(torch.tensor(-1.)))
-        #                                 for i in range(hidden_dims[layer])]),
-        #                                 requires_grad=True)
-        self.parameter_alpha = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
-        self.parameter_beta = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True)
+        self.parameter_alpha = Parameter(-1*torch.ones(hidden_dims[layer]), requires_grad=True) # this parameter lies #S
+        self.parameter_beta = Parameter(torch.tensor([softplus_inverse((hidden_dims[layer] - i) *  f.softplus(torch.tensor(-1.)))
+                                        for i in range(hidden_dims[layer])]),
+                                        requires_grad=True)
+        # self.parameter_alpha = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
+        # self.parameter_beta = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True)
         self.num_samps_for_switch = num_samps_for_switch
 
     # Switch function for Conv layers
