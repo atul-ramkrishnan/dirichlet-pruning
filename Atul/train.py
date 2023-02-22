@@ -108,7 +108,7 @@ def train(model_type, save_dir, cpu, resume, eval, batch_size, workers, lr, mome
 
     
     for epoch in range(start_epoch, epochs):
-        adjust_learning_rate(optimizer, epoch)
+        adjust_learning_rate(optimizer, lr, epoch)
 
         # train for one epoch
         train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq, device)
