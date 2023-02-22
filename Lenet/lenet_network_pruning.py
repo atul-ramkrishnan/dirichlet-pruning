@@ -475,8 +475,7 @@ def threshold_prune_and_retrain(combinationss, thresh):
 
     #####################################################################
     # RETRAIN
-    # Clear gradients of importance switches after every backward pass.
-    # Similar to optimizer.zero_grad()
+    # Make gradients of pruned layers 0
     print("Gradient")
     if retrain:
         def gradi_new(combs_num):
