@@ -55,6 +55,7 @@ def main():
             momentum=args.momentum,
             weight_decay=args.weight_decay,
             start_epoch=args.start_epoch,
+            epochs=args.epochs,
             print_freq=args.print_freq
             )
 
