@@ -81,6 +81,7 @@ def train(model_type, save_dir, cpu, resume, eval, batch_size, workers, lr, mome
     model = vgg.vgg16_bn()
     model.to(device)
 
+    best_prec1 = 0
     if resume:
         if os.path.isfile(resume):
             print("=> loading checkpoint '{}'".format(resume))
