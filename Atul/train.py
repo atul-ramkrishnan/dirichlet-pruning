@@ -114,7 +114,7 @@ def train(model_type, save_dir, cpu, resume, eval, batch_size, workers, lr, mome
         train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq, device)
 
         # evaluate on validation set
-        prec1 = evaluate(val_loader, model, criterion)
+        prec1 = evaluate(val_loader, model, criterion, print_freq, device)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
