@@ -1,14 +1,14 @@
 import argparse
-from train import train
+from train import train, train_importance_switches
 from evaluate import get_test_accuracy
-
+from prune import prune_and_retrain
 
 parser = argparse.ArgumentParser(description="Dirichlet Pruning")
 required = parser.add_argument_group('required arguments')
 optional = parser.add_argument_group('optional arguments')
 
 required.add_argument('--mode',
-                    choices=["train_original", "train_compressed", "prune", "evaluate_original", "evaluate_compressed"],
+                    choices=["train_original", "train_importance_switches", "prune_and_retrain", "evaluate_original", "evaluate_compressed"],
                     required=True)
 
 optional.add_argument('--method', choices=["dirichlet", "generalized_dirichlet"], default="None")
@@ -37,6 +37,7 @@ optional.add_argument('--cpu', dest='cpu', action='store_true',
 optional.add_argument('--save-dir',
                     help='The directory used to save the trained models',
                     default='saved_models', type=str)
+optional.add_argument("--switch_samps", default=150, type=int)
 
 
 def main():
@@ -59,10 +60,21 @@ def main():
             print_freq=args.print_freq
             )
 
-    elif args.mode == "train_compressed":
-        pass
-    elif args.mode == "prune":
-        pass
+    elif args.mode == "train_importance_switches":
+        train_importance_switches(
+                                method=args.method,
+                                switch_samps=args.switch_samps,
+                                cpu=args.cpu,
+                                resume=args.resume,
+                                batch_size=args.batch_size,
+                                workers=args.workers,
+                                lr=args.lr,
+                                epochs=args.epochs,
+                                print_freq=args.print_freq,
+                                save_dir=args.save_dir
+                                )
+    elif args.mode == "prune_and_retrain":
+        prune_and_retrain()
     elif args.mode == "evaluate_original":
         pass
     elif args.mode == "evaluate_compressed":

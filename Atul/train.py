@@ -1,8 +1,9 @@
 import os
 import time
+import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim
+import torch.optim as optim
 import torch.utils.data
 import vgg
 from dataloader import get_train_valid_loader
@@ -124,4 +125,137 @@ def train(model_type, save_dir, cpu, resume, eval, batch_size, workers, lr, mome
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
             'best_prec1': best_prec1,
-        }, is_best, filename=os.path.join(save_dir, 'checkpoint_{}.tar'.format(epoch)))
+        }, is_best, filename=os.path.join(save_dir, f'checkpoint_{model_type}_epoch{epoch}.tar'))
+
+
+def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, annealing_rate, device):
+    cross_entropy = nn.functional.cross_entropy(prediction, true_y)
+    # KLD term
+    alpha_0 = torch.Tensor([alpha_0]).to(device)
+    hidden_dim = torch.Tensor([hidden_dim]).to(device)
+    trm1 = torch.lgamma(torch.sum(S)) - torch.lgamma(hidden_dim * alpha_0)
+    trm2 = - torch.sum(torch.lgamma(S)) + hidden_dim * torch.lgamma(alpha_0)
+    trm3 = torch.sum((S - alpha_0) * (torch.digamma(S) - torch.digamma(torch.sum(S))))
+    KLD = trm1 + trm2 + trm3
+    # annealing kl-divergence term is better
+
+    # if verbose:
+    #     print("<----------------------------------------------------------------------------->")
+    #     print("Prior alpha", alpha_0)
+    #     print("\n")
+    #     print("Posterior alpha", S)
+    #     print("\n")
+    #     print("Prior mean", mean_Dirichlet(alpha_0))
+    #     print("Posterior mean", mean_Dirichlet(S))
+    #     print("\n")
+    #     print("KL divergence", KLD)
+    #     print("\n")
+
+    return cross_entropy + annealing_rate * KLD / how_many_samps
+
+
+def train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, device, resume, batch_size, workers):
+    train_loader, val_loader = get_train_valid_loader('./dataset',
+                                                    batch_size,
+                                                    augment=True,
+                                                    random_seed=0,
+                                                    num_workers=workers)
+
+    model = vgg.vgg16_bn().to(device)
+    criterion = nn.CrossEntropyLoss()
+
+    if os.path.isfile(resume):
+        print("=> loading checkpoint '{}'".format(resume))
+        checkpoint = torch.load(resume)
+        model.load_state_dict(checkpoint['state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})"
+                .format(eval, checkpoint['epoch']))
+    else:
+        print("=> no checkpoint found at '{}'".format(resume))
+
+    if method == "dirichlet":
+        optimizer = optim.Adam([model.switch_parameter_alpha], lr=lr)
+    elif method == "generalized_dirichlet":
+        pass
+
+    model.train()
+    stop=0; epoch=0; best_accuracy=0; entry=np.zeros(3); best_model=-1
+    how_many_epochs=200
+    annealing_steps = float(8000. * how_many_epochs)
+    beta_func = lambda s: min(s, annealing_steps) / annealing_steps
+
+    # while (stop<early_stopping):
+    for epochs in range(epochs):
+        epoch=epoch+1
+        annealing_rate = beta_func(epoch)
+        model.train()
+        # evaluate(model, layer)
+        for i, data in enumerate(train_loader):
+            inputs, labels=data
+            inputs, labels=inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs, S=model(inputs, layer) #when switc hes
+            #outputs=net2(inputs)
+            #loss=criterion(outputs, labels)
+            alpha_0 = 2
+            loss = loss_functionKL(outputs, labels, S, alpha_0, vgg.hidden_dims[layer], batch_size, annealing_rate)
+            #loss=loss_function(outputs, labels, 1, 1, 1, 1)
+            loss.backward()
+            #print(net2.c1.weight.grad[1, :])
+            #print(net2.c1.weight[1, :])
+            optimizer.step()
+            # if i % 100==0:
+            #    print (i)
+            #    print (loss.item())
+            #    evaluate()
+        #print (i)
+        print (loss.item())
+        accuracy=evaluate(model, layer)
+        print ("Epoch " +str(epoch)+ " ended.")
+        # for name, param in net2.named_parameters():
+        #     print(name)
+        #     print(param[1])
+
+
+        print("S")
+        print(S)
+        print(torch.argsort(S))
+        print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
+
+        if (accuracy<=best_accuracy):
+            stop=stop+1
+            entry[2]=0
+        else:
+            best_accuracy=accuracy
+            print("Best updated")
+            stop=0
+            entry[2]=1
+            best_model=model.state_dict()
+            best_optim=optimizer.state_dict()
+            torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "models/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
+
+        print("\n")
+        #write
+        # entry[0]=accuracy; entry[1]=loss
+        # with open(filename, "a+") as file:
+        #     file.write(",".join(map(str, entry))+"\n")
+    return best_accuracy, epoch, best_model, S
+
+
+def train_importance_switches(method, switch_samps, cpu, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
+    switch_data={}
+    switch_data['combinationss'] = []
+    switch_data['switches'] = []
+    for layer in vgg.hidden_dims.keys():
+        best_accuracy, epoch, best_model, S = train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, device, resume, batch_size, workers)
+        print("Rank for switches from most important/largest to smallest after %s " %  str(epochs))
+        print(S)
+        print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
+        ranks_sorted = np.argsort(S.cpu().detach().numpy())[::-1]
+        print(",".join(map(str, ranks_sorted)))
+        switch_data['combinationss'].append(ranks_sorted); switch_data['switches'].append(S.cpu().detach().numpy())
+    print('*'*30)
+    print(switch_data['combinationss'])
+    combinationss=switch_data['combinationss']
+    file_path=os.path.join(save_dir, 'importance_switches', method, f"switch_samps_{switch_samps}_epochs_{epochs}")
+    np.save(file_path, switch_data)

@@ -4,32 +4,80 @@
 Modified from https://github.com/pytorch/vision.git
 '''
 import math
-
+from enum import Enum
+import torch
 import torch.nn as nn
-import torch.nn.init as init
+from torch.nn.parameter import Parameter
+from torch.distributions import Gamma
+import torch.nn.functional as F
+import collections
+
 
 __all__ = [
     'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',
     'vgg19_bn', 'vgg19',
 ]
 
+class Distribution(Enum):
+    DIRICHLET = 1
+    GENERALIZED_DIRICHLET = 2
+
+split ={
+    "conv1": 1,
+    "conv2": 4,
+    "conv3": 8,
+    "conv4": 11,
+    "conv5": 15,
+    "conv6": 18,
+    "conv7": 21,
+    "conv8": 25,
+    "conv9": 28,
+    "conv10": 31,
+    "conv11": 35,
+    "conv12": 38,
+    "conv13": 41
+}
+
+hidden_dims = {
+    "conv1": 64,
+    "conv2": 64,
+    "conv3": 128,
+    "conv4": 128,
+    "conv5": 256,
+    "conv6": 256,
+    "conv7": 256,
+    "conv8": 512,
+    "conv9": 512,
+    "conv10": 512,
+    "conv11": 512,
+    "conv12": 512,
+    "conv12": 512,
+    "fc1": 512,
+    "fc2": 512
+}
+
 
 class VGG(nn.Module):
     '''
     VGG model 
     '''
-    def __init__(self, features):
+    def __init__(self, features, distribution=None, switch_samps=None, hidden_dim=None, device=torch.device('cuda')):
         super(VGG, self).__init__()
         self.features = features
-        self.classifier = nn.Sequential(
-            nn.Dropout(),
-            nn.Linear(512, 512),
-            nn.ReLU(True),
-            nn.Dropout(),
-            nn.Linear(512, 512),
-            nn.ReLU(True),
-            nn.Linear(512, 10),
-        )
+        self.fc_1 = nn.Linear(512, 512)
+        self.fc_2 = nn.Linear(512, 512)
+        self.fc_3 = nn.Linear(512, 10)
+        self.dropout = nn.Dropout()
+
+        # self.classifier = nn.Sequential(
+        #     nn.Dropout(),
+        #     nn.Linear(512, 512),
+        #     nn.ReLU(True),
+        #     nn.Dropout(),
+        #     nn.Linear(512, 512),
+        #     nn.ReLU(True),
+        #     nn.Linear(512, 10),
+        # )
          # Initialize weights
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -37,28 +85,102 @@ class VGG(nn.Module):
                 m.weight.data.normal_(0, math.sqrt(2. / n))
                 m.bias.data.zero_()
 
+        self.distribution = distribution
+        self.switch_samps = switch_samps
+        self.device = device
 
-    def forward(self, x):
-        x = self.features(x)
-        x = x.view(x.size(0), -1)
-        x = self.classifier(x)
-        return x
+        if distribution == Distribution.DIRICHLET:
+            self.switch_parameter_alpha = Parameter(-1*torch.ones(hidden_dim), requires_grad=True)
+        elif distribution == Distribution.GENERALIZED_DIRICHLET:
+            pass
+
+    def switch_multiplication(self, output, SstackT):
+        rep = SstackT.unsqueeze(2).unsqueeze(2).repeat(1, 1, output.shape[2], output.shape[3])  # (150,10,24,24)
+        # output is (100,10,24,24), we want to have 100,150,10,24,24, I guess
+        output = torch.einsum('ijkl, mjkl -> imjkl', (rep, output))
+        output = output.view(output.shape[0] * output.shape[1], output.shape[2], output.shape[3], output.shape[4])
+        return output, SstackT
+
+
+    def switch_multiplication_fc(self, output, SstackT):
+        output = torch.einsum('ij, mj -> imj', (SstackT, output))
+        output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
+        return output, SstackT
+
+
+    def forward(self, x, switch_layer=None):
+        BATCH_SIZE = x.shape[0]
+        if self.distribution == Distribution.DIRICHLET:
+            phi = F.softplus(self.switch_parameter_alpha)
+            """ draw Gamma RVs using phi and 1 """
+            num_samps = self.num_samps_for_switch
+            concentration_param = phi.view(-1, 1).repeat(1, num_samps).to(self.device)
+            beta_param = torch.ones(concentration_param.size()).to(self.device)
+            # Gamma has two parameters, concentration and beta, all of them are copied to 200,150 matrix
+            Gamma_obj = Gamma(concentration_param, beta_param)
+            gamma_samps = Gamma_obj.rsample()  # 200, 150, hidden_dim x samples_num
+
+            if any(torch.sum(gamma_samps, 0) == 0):
+                print("sum of gamma samps are zero!")
+            else:
+                Sstack = gamma_samps / torch.sum(gamma_samps, 0)  # 1dim - number of neurons (200), 2dim - samples (150)
+
+            SstackT = Sstack.t()
+
+        elif self.distribution == Distribution.GENERALIZED_DIRICHLET:
+            pass
+
+
+
+        if switch_layer is not None:
+            if switch_layer in split:
+                x = self.features[:split[switch_layer]]
+                x, SstackT_ret=self.switch_multiplication(x, SstackT)
+                x = self.features[split[switch_layer]:]
+            x = x.view(x.size(0), -1)
+            x = self.fc1(x)
+            if switch_layer == "fc1":
+                x, SstackT_ret = self.switch_multiplication_fc(x, SstackT)
+            x = self.fc2(x)
+            if switch_layer == "fc2":
+                x, SstackT_ret = self.switch_multiplication_fc(x, SstackT)
+            x = self.fc3(x)
+            x = x.reshape(BATCH_SIZE, self.num_samps_for_switch, -1)
+            x = torch.mean(x, 1)
+
+        else:
+            x = self.features(x)
+            x = x.view(x.size(0), -1)
+            x = self.fc1(x)
+            x = self.fc2(x)
+            x = self.fc3(x)
+
+        if self.distribution == Distribution.DIRICHLET:
+            return x, phi
+        elif self.distribution == Distribution.GENERALIZED_DIRICHLET:
+            pass
+        else:
+            return x
 
 
 def make_layers(cfg, batch_norm=False):
-    layers = []
+    layers = collections.OrderedDict()
     in_channels = 3
-    for v in cfg:
+    for i, v in enumerate(cfg):
         if v == 'M':
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
+            layers[f"MaxPool2d{i}"] = nn.MaxPool2d(kernel_size=2, stride=2)
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
             if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
+                layers[f"Conv2d_{i}"] = conv2d
+                layers[f"BatchNorm2d_{i}"] = nn.BatchNorm2d(v)
+                layers[f"ReLU_{i}"] = nn.ReLU(inplace=True)
             else:
+                layers[f"Conv2d_{i}"] = conv2d
+                layers[f"ReLU_{i}"] = nn.ReLU(inplace=True)
                 layers += [conv2d, nn.ReLU(inplace=True)]
             in_channels = v
-    return nn.Sequential(*layers)
+    return nn.Sequential(layers)
 
 
 cfg = {
