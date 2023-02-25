@@ -217,9 +217,9 @@ cfg = {
 #     return VGG(make_layers(cfg['D']))
 
 
-def vgg16_bn():
+def vgg16_bn(distribution=None, switch_samps=None, hidden_dim=None, device=torch.device('cuda')):
     """VGG 16-layer model (configuration "D") with batch normalization"""
-    return VGG(make_layers(cfg['D'], batch_norm=True))
+    return VGG(make_layers(cfg['D'], batch_norm=True), distribution, switch_samps, hidden_dim, device)
 
 
 # def vgg19():
