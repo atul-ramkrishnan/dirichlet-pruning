@@ -155,13 +155,14 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
 
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
-    model = vgg.vgg16_bn(method, switch_samps, layer, device).to(device)
+
+    model = vgg.vgg16_bn(method=method, switch_samps=switch_samps, layer=layer, device=device).to(device)
     # criterion = nn.CrossEntropyLoss()
 
     if os.path.isfile(resume):
         print("=> loading checkpoint '{}'".format(resume))
         checkpoint = torch.load(resume)
-        model.load_state_dict(checkpoint['state_dict'])
+        model.load_state_dict(checkpoint['state_dict'], strict=False)
         print("=> loaded checkpoint '{}' (epoch {})"
                 .format(eval, checkpoint['epoch']))
     else:
