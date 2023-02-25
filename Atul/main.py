@@ -3,7 +3,6 @@ from train import train, train_importance_switches
 from evaluate import get_test_accuracy
 from prune import prune_and_retrain
 import torch
-from util import Method
 
 
 parser = argparse.ArgumentParser(description="Dirichlet Pruning")
@@ -67,13 +66,8 @@ def main():
 
     elif args.mode == "train_importance_switches":
         print(f"Training the importance switches using the \"{args.method}\" method...")
-
-        if args.method == "dirichlet":
-            method = Method.DIRICHLET
-        elif args.method == "generalized_dirichlet":
-            method = Method.GENERALIZED_DIRICHLET
         train_importance_switches(
-                                method=method,
+                                method=args.method,
                                 switch_samps=args.switch_samps,
                                 device=device,
                                 resume=args.resume,
@@ -87,10 +81,6 @@ def main():
     elif args.mode == "prune_and_retrain":
         print("Pruning and retraining...")
 
-        if args.method == "dirichlet":
-            method = Method.DIRICHLET
-        elif args.method == "generalized_dirichlet":
-            method = Method.GENERALIZED_DIRICHLET
         prune_and_retrain(
                         switch_save_path=args.switch_save_path,
                         thresholds=args.thresholds,

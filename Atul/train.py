@@ -156,6 +156,11 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
 
+    if method == "dirichlet":
+        method = Method.DIRICHLET
+    elif method == "generalized_dirichlet":
+        method = Method.GENERALIZED_DIRICHLET
+
     model = vgg.vgg16_bn(method=method, switch_samps=switch_samps, hidden_dim=layer, device=device).to(device)
     # criterion = nn.CrossEntropyLoss()
 
