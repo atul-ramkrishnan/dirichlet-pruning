@@ -8,7 +8,7 @@ import torch.utils.data
 import vgg
 from dataloader import get_train_valid_loader
 from util import AverageMeter, save_checkpoint, create_dir_if_not_exists
-from evaluate import evaluate, accuracy
+from evaluate import evaluate, evaluate_switch_at_layer, accuracy
 
 
 def adjust_learning_rate(optimizer, lr, epoch):
@@ -156,7 +156,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
     model = vgg.vgg16_bn().to(device)
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
 
     if os.path.isfile(resume):
         print("=> loading checkpoint '{}'".format(resume))
@@ -173,8 +173,12 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
         pass
 
     model.train()
-    stop=0; epoch=0; best_accuracy=0; entry=np.zeros(3); best_model=-1
-    how_many_epochs=200
+    stop = 0
+    epoch = 0
+    best_accuracy = 0
+    entry = np.zeros(3)
+    best_model = -1
+    how_many_epochs = 200
     annealing_steps = float(8000. * how_many_epochs)
     beta_func = lambda s: min(s, annealing_steps) / annealing_steps
 
@@ -182,7 +186,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
         epoch=epoch+1
         annealing_rate = beta_func(epoch)
         model.train()
-        # evaluate(model, layer)
+        evaluate_switch_at_layer(model, layer)
         for i, data in enumerate(train_loader):
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
@@ -200,7 +204,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
             #    evaluate()
         #print (i)
         print (loss.item())
-        # accuracy=evaluate(model, layer)
+        accuracy = evaluate_switch_at_layer(model, layer)
         print ("Epoch " +str(epoch)+ " ended.")
 
         print("S")
@@ -234,7 +238,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     return best_accuracy, epoch, best_model, S
 
 
-def train_importance_switches(method, train_loader, val_loader, switch_samps, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
+def train_importance_switches(method, switch_samps, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
     file_path = os.path.join(save_dir, 'importance_switches', method)
     create_dir_if_not_exists(file_path)
     train_loader, val_loader = get_train_valid_loader('./dataset',
