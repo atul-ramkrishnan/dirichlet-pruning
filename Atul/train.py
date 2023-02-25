@@ -192,7 +192,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
         epoch=epoch+1
         annealing_rate = beta_func(epoch)
         model.train()
-        evaluate_switch_at_layer(model, layer)
+        # evaluate_switch_at_layer(val_loader, model, layer, device)
         for i, data in enumerate(train_loader):
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
@@ -210,7 +210,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
             #    evaluate()
         #print (i)
         print (loss.item())
-        accuracy = evaluate_switch_at_layer(model, layer)
+        accuracy = evaluate_switch_at_layer(val_loader, model, layer, device)
         print ("Epoch " +str(epoch)+ " ended.")
 
         print("S")
