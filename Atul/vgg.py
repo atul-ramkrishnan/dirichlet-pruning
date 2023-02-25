@@ -138,22 +138,22 @@ class VGG(nn.Module):
                 x, SstackT_ret=self.switch_multiplication(x, SstackT)
                 x = self.features[vgg16_split[switch_layer]:]
             x = x.view(x.size(0), -1)
-            x = self.fc1(x)
-            if switch_layer == "fc1":
+            x = self.fc_1(x)
+            if switch_layer == "fc_1":
                 x, SstackT_ret = self.switch_multiplication_fc(x, SstackT)
-            x = self.fc2(x)
-            if switch_layer == "fc2":
+            x = self.fc_2(x)
+            if switch_layer == "fc_2":
                 x, SstackT_ret = self.switch_multiplication_fc(x, SstackT)
-            x = self.fc3(x)
+            x = self.fc_3(x)
             x = x.reshape(BATCH_SIZE, self.num_samps_for_switch, -1)
             x = torch.mean(x, 1)
 
         else:
             x = self.features(x)
             x = x.view(x.size(0), -1)
-            x = self.fc1(x)
-            x = self.fc2(x)
-            x = self.fc3(x)
+            x = self.fc_1(x)
+            x = self.fc_2(x)
+            x = self.fc_3(x)
 
         if self.distribution == Distribution.DIRICHLET:
             return x, phi
