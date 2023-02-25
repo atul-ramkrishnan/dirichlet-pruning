@@ -249,7 +249,7 @@ def train_importance_switches(method, switch_samps, resume, batch_size, workers,
     switch_data={}
     switch_data['combinationss'] = []
     switch_data['switches'] = []
-    for layer in vgg.hidden_dims.keys():
+    for layer in vgg.vgg16_hidden_dims.keys():
         best_accuracy, epoch, best_model, S = train_one_importance_switch(
                                                                         method=method,
                                                                         train_loader=train_loader,
