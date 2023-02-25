@@ -68,7 +68,7 @@ def evaluate(val_loader, model, criterion, print_freq, device):
     return top1.avg
 
 
-def evaluate(val_loader, model, layer, device):
+def evaluate_switch_at_layer(val_loader, model, layer, device):
     # print('Prediction when network is forced to predict')
     model.eval()
     correct = 0
