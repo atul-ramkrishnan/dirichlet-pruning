@@ -2,7 +2,6 @@ import time
 import numpy as np
 import torch
 from util import AverageMeter
-from dataloader import get_test_loader
 
 
 def accuracy(output, target, topk=(1,)):
