@@ -9,6 +9,7 @@ import vgg
 from dataloader import get_train_valid_loader
 from util import AverageMeter, save_checkpoint, create_dir_if_not_exists
 from evaluate import evaluate, evaluate_switch_at_layer, accuracy
+from main import Method
 
 
 def adjust_learning_rate(optimizer, lr, epoch):
@@ -156,7 +157,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
 
-    model = vgg.vgg16_bn(distribution=method, switch_samps=switch_samps, hidden_dim=layer, device=device).to(device)
+    model = vgg.vgg16_bn(method=method, switch_samps=switch_samps, hidden_dim=layer, device=device).to(device)
     # criterion = nn.CrossEntropyLoss()
 
     if os.path.isfile(resume):
@@ -168,9 +169,9 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     else:
         print("=> no checkpoint found at '{}'".format(resume))
 
-    if method == "dirichlet":
+    if method == Method.DIRICHLET:
         optimizer = optim.Adam([model.switch_parameter_alpha], lr=lr)
-    elif method == "generalized_dirichlet":
+    elif method == Method.GENERALIZED_DIRICHLET:
         pass
 
     model.train()

@@ -4,23 +4,19 @@
 Modified from https://github.com/pytorch/vision.git
 '''
 import math
-from enum import Enum
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
 from torch.distributions import Gamma
 import torch.nn.functional as F
 import collections
-
+from main import Method
 
 __all__ = [
     'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',
     'vgg19_bn', 'vgg19',
 ]
 
-class Distribution(Enum):
-    DIRICHLET = 1
-    GENERALIZED_DIRICHLET = 2
 
 vgg16_split = {
     "conv1": 1,
@@ -61,7 +57,7 @@ class VGG(nn.Module):
     '''
     VGG model 
     '''
-    def __init__(self, features, distribution=None, switch_samps=None, hidden_dim=None, device=torch.device('cuda')):
+    def __init__(self, features, method=None, switch_samps=None, hidden_dim=None, device=torch.device('cuda')):
         super(VGG, self).__init__()
         self.features = features
         self.fc_1 = nn.Linear(512, 512)
@@ -85,13 +81,13 @@ class VGG(nn.Module):
                 m.weight.data.normal_(0, math.sqrt(2. / n))
                 m.bias.data.zero_()
 
-        self.distribution = distribution
+        self.method = method
         self.switch_samps = switch_samps
         self.device = device
 
-        if distribution == Distribution.DIRICHLET:
+        if method == Method.DIRICHLET:
             self.switch_parameter_alpha = Parameter(-1*torch.ones(vgg16_hidden_dims[hidden_dim]), requires_grad=True)
-        elif distribution == Distribution.GENERALIZED_DIRICHLET:
+        elif method == Method.GENERALIZED_DIRICHLET:
             pass
 
     def switch_multiplication(self, output, SstackT):
@@ -110,7 +106,7 @@ class VGG(nn.Module):
 
     def forward(self, x, switch_layer=None):
         BATCH_SIZE = x.shape[0]
-        if self.distribution == Distribution.DIRICHLET:
+        if self.method == Method.DIRICHLET:
             phi = F.softplus(self.switch_parameter_alpha)
             """ draw Gamma RVs using phi and 1 """
             num_samps = self.num_samps_for_switch
@@ -127,7 +123,7 @@ class VGG(nn.Module):
 
             SstackT = Sstack.t()
 
-        elif self.distribution == Distribution.GENERALIZED_DIRICHLET:
+        elif self.method == Method.GENERALIZED_DIRICHLET:
             pass
 
 
@@ -155,9 +151,9 @@ class VGG(nn.Module):
             x = self.fc_2(x)
             x = self.fc_3(x)
 
-        if self.distribution == Distribution.DIRICHLET:
+        if self.method == Method.DIRICHLET:
             return x, phi
-        elif self.distribution == Distribution.GENERALIZED_DIRICHLET:
+        elif self.method == Method.GENERALIZED_DIRICHLET:
             pass
         else:
             return x
@@ -217,9 +213,9 @@ cfg = {
 #     return VGG(make_layers(cfg['D']))
 
 
-def vgg16_bn(distribution=None, switch_samps=None, hidden_dim=None, device=torch.device('cuda')):
+def vgg16_bn(method=None, switch_samps=None, hidden_dim=None, device=torch.device('cuda')):
     """VGG 16-layer model (configuration "D") with batch normalization"""
-    return VGG(make_layers(cfg['D'], batch_norm=True), distribution, switch_samps, hidden_dim, device)
+    return VGG(make_layers(cfg['D'], batch_norm=True), method=method, switch_samps=switch_samps, hidden_dim=hidden_dim, device=device)
 
 
 # def vgg19():

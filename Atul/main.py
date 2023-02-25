@@ -1,4 +1,5 @@
 import argparse
+from enum import Enum
 from train import train, train_importance_switches
 from evaluate import get_test_accuracy
 from prune import prune_and_retrain
@@ -41,6 +42,9 @@ optional.add_argument('--save-dir',
                     default='saved', type=str)
 optional.add_argument("--switch_samps", default=150, type=int)
 
+class Method(Enum):
+    DIRICHLET = 1
+    GENERALIZED_DIRICHLET = 2
 
 def main():
     args=parser.parse_args()
@@ -66,8 +70,13 @@ def main():
 
     elif args.mode == "train_importance_switches":
         print(f"Training the importance switches using the \"{args.method}\" method...")
+
+        if args.method == "dirichlet":
+            method = Method.DIRICHLET
+        elif args.method == "generalized_dirichlet":
+            method = Method.GENERALIZED_DIRICHLET
         train_importance_switches(
-                                method=args.method,
+                                method=method,
                                 switch_samps=args.switch_samps,
                                 device=device,
                                 resume=args.resume,
@@ -80,6 +89,11 @@ def main():
                                 )
     elif args.mode == "prune_and_retrain":
         print("Pruning and retraining...")
+        
+        if args.method == "dirichlet":
+            method = Method.DIRICHLET
+        elif args.method == "generalized_dirichlet":
+            method = Method.GENERALIZED_DIRICHLET
         prune_and_retrain(
                         switch_save_path=args.switch_save_path,
                         thresholds=args.thresholds,
