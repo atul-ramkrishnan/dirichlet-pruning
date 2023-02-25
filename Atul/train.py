@@ -7,7 +7,7 @@ import torch.optim as optim
 import torch.utils.data
 import vgg
 from dataloader import get_train_valid_loader
-from util import AverageMeter, save_checkpoint
+from util import AverageMeter, save_checkpoint, create_dir_if_not_exists
 from evaluate import evaluate, accuracy
 
 
@@ -71,7 +71,8 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
 
 
 def train(model_type, save_dir, device, resume, eval, batch_size, workers, lr, momentum, weight_decay, start_epoch, epochs, print_freq):
-    
+    file_path = os.path.join(save_dir, 'models')
+    create_dir_if_not_exists(file_path)
     # Only support VGG16_BN for now
     model = vgg.vgg16_bn()
     model.to(device)
@@ -121,7 +122,7 @@ def train(model_type, save_dir, device, resume, eval, batch_size, workers, lr, m
                 'state_dict': model.state_dict(),
                 'best_prec1': best_prec1,
                 'optim_state_dict': optimizer.state_dict()
-            }, filename=os.path.join(save_dir, 'models', f'checkpoint_{model_type}_epoch{epoch}.tar'))
+            }, filename=os.path.join(file_path, f'checkpoint_{model_type}_epoch{epoch}.tar'))
 
 
 def loss_function_dirichlet(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, annealing_rate, device):
@@ -152,6 +153,8 @@ def loss_function_dirichlet(prediction, true_y, S, alpha_0, hidden_dim, how_many
 
 def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, layer, switch_samps, device, resume, batch_size, workers, print_freq, save_dir):
 
+    file_path = os.path.join(save_dir, 'models', method)
+    create_dir_if_not_exists(file_path)
     model = vgg.vgg16_bn().to(device)
     criterion = nn.CrossEntropyLoss()
 
@@ -220,7 +223,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
             'state_dict': model.state_dict(),
             'best_prec1': best_accuracy,
             'optim_state_dict': best_optim
-        }, filename=os.path.join(save_dir, 'models', f'checkpoint_imp_switch_layer_{layer}_epoch{epoch}.tar'))
+        }, filename=os.path.join(file_path, f'checkpoint_imp_switch_layer_{layer}_epoch{epoch}.tar'))
             # torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "models/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
 
         print("\n")
@@ -232,6 +235,8 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
 
 
 def train_importance_switches(method, train_loader, val_loader, switch_samps, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
+    file_path = os.path.join(save_dir, 'importance_switches', method)
+    create_dir_if_not_exists(file_path)
     train_loader, val_loader = get_train_valid_loader('./dataset',
                                                     batch_size,
                                                     augment=True,
@@ -265,5 +270,5 @@ def train_importance_switches(method, train_loader, val_loader, switch_samps, re
     print('*'*30)
     print(switch_data['combinationss'])
     # combinationss=switch_data['combinationss']
-    file_path=os.path.join(save_dir, 'importance_switches', method, f"switch_samps_{switch_samps}_epochs_{epochs}")
+    file_path=os.path.join(file_path, f"switch_samps_{switch_samps}_epochs_{epochs}")
     np.save(file_path, switch_data)

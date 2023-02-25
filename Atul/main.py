@@ -3,7 +3,7 @@ from train import train, train_importance_switches
 from evaluate import get_test_accuracy
 from prune import prune_and_retrain
 import torch
-from util import create_dir_if_not_exists
+
 
 parser = argparse.ArgumentParser(description="Dirichlet Pruning")
 required = parser.add_argument_group('required arguments')
@@ -47,7 +47,6 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
     print(f"Running on {device}...")
     if args.mode == "train_original":
-        create_dir_if_not_exists(args.save_dir)
         print("Training the original (uncompressed) network...")
         train(
             model_type=args.mode,
@@ -67,7 +66,6 @@ def main():
 
     elif args.mode == "train_importance_switches":
         print(f"Training the importance switches using the \"{args.method}\" method...")
-        create_dir_if_not_exists(args.save_dir)
         train_importance_switches(
                                 method=args.method,
                                 switch_samps=args.switch_samps,
@@ -82,7 +80,6 @@ def main():
                                 )
     elif args.mode == "prune_and_retrain":
         print("Pruning and retraining...")
-        create_dir_if_not_exists(args.save_dir)
         prune_and_retrain(
                         switch_save_path=args.switch_save_path,
                         thresholds=args.thresholds,
