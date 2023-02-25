@@ -109,7 +109,7 @@ class VGG(nn.Module):
         if self.method == Method.DIRICHLET:
             phi = F.softplus(self.switch_parameter_alpha)
             """ draw Gamma RVs using phi and 1 """
-            num_samps = self.num_samps_for_switch
+            num_samps = self.switch_samps
             concentration_param = phi.view(-1, 1).repeat(1, num_samps).to(self.device)
             beta_param = torch.ones(concentration_param.size()).to(self.device)
             # Gamma has two parameters, concentration and beta, all of them are copied to 200,150 matrix
@@ -141,7 +141,7 @@ class VGG(nn.Module):
             if switch_layer == "fc_2":
                 x, SstackT_ret = self.switch_multiplication_fc(x, SstackT)
             x = self.fc_3(x)
-            x = x.reshape(BATCH_SIZE, self.num_samps_for_switch, -1)
+            x = x.reshape(BATCH_SIZE, self.switch_samps, -1)
             x = torch.mean(x, 1)
 
         else:
