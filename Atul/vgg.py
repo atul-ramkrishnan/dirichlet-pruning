@@ -90,7 +90,7 @@ class VGG(nn.Module):
         self.device = device
 
         if distribution == Distribution.DIRICHLET:
-            self.switch_parameter_alpha = Parameter(-1*torch.ones(hidden_dim), requires_grad=True)
+            self.switch_parameter_alpha = Parameter(-1*torch.ones(vgg16_hidden_dims[hidden_dim]), requires_grad=True)
         elif distribution == Distribution.GENERALIZED_DIRICHLET:
             pass
 
