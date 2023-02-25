@@ -44,7 +44,9 @@ optional.add_argument("--switch_samps", default=150, type=int)
 def main():
     args=parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
+    print(f"Running on {device}...")
     if args.mode == "train_original":
+        print("Training the original (uncompressed) network...")
         train(
             model_type=args.mode,
             save_dir=args.save_dir,
@@ -62,6 +64,7 @@ def main():
             )
 
     elif args.mode == "train_importance_switches":
+        print(f"Training the importance switches using the \"{args.method}\" method...")
         train_importance_switches(
                                 method=args.method,
                                 switch_samps=args.switch_samps,
@@ -75,6 +78,7 @@ def main():
                                 save_dir=args.save_dir
                                 )
     elif args.mode == "prune_and_retrain":
+        print("Pruning and retraining...")
         prune_and_retrain(
                         switch_save_path=args.switch_save_path,
                         thresholds=args.thresholds,

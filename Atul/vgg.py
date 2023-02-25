@@ -22,7 +22,7 @@ class Distribution(Enum):
     DIRICHLET = 1
     GENERALIZED_DIRICHLET = 2
 
-split = {
+vgg16_split = {
     "conv1": 1,
     "conv2": 4,
     "conv3": 8,
@@ -38,7 +38,7 @@ split = {
     "conv13": 41
 }
 
-hidden_dims = {
+vgg16_hidden_dims = {
     "conv1": 64,
     "conv2": 64,
     "conv3": 128,
@@ -133,10 +133,10 @@ class VGG(nn.Module):
 
 
         if switch_layer is not None:
-            if switch_layer in split:
-                x = self.features[:split[switch_layer]]
+            if switch_layer in vgg16_split:
+                x = self.features[:vgg16_split[switch_layer]]
                 x, SstackT_ret=self.switch_multiplication(x, SstackT)
-                x = self.features[split[switch_layer]:]
+                x = self.features[vgg16_split[switch_layer]:]
             x = x.view(x.size(0), -1)
             x = self.fc1(x)
             if switch_layer == "fc1":
@@ -192,29 +192,29 @@ cfg = {
 }
 
 
-def vgg11():
-    """VGG 11-layer model (configuration "A")"""
-    return VGG(make_layers(cfg['A']))
+# def vgg11():
+#     """VGG 11-layer model (configuration "A")"""
+#     return VGG(make_layers(cfg['A']))
 
 
-def vgg11_bn():
-    """VGG 11-layer model (configuration "A") with batch normalization"""
-    return VGG(make_layers(cfg['A'], batch_norm=True))
+# def vgg11_bn():
+#     """VGG 11-layer model (configuration "A") with batch normalization"""
+#     return VGG(make_layers(cfg['A'], batch_norm=True))
 
 
-def vgg13():
-    """VGG 13-layer model (configuration "B")"""
-    return VGG(make_layers(cfg['B']))
+# def vgg13():
+#     """VGG 13-layer model (configuration "B")"""
+#     return VGG(make_layers(cfg['B']))
 
 
-def vgg13_bn():
-    """VGG 13-layer model (configuration "B") with batch normalization"""
-    return VGG(make_layers(cfg['B'], batch_norm=True))
+# def vgg13_bn():
+#     """VGG 13-layer model (configuration "B") with batch normalization"""
+#     return VGG(make_layers(cfg['B'], batch_norm=True))
 
 
-def vgg16():
-    """VGG 16-layer model (configuration "D")"""
-    return VGG(make_layers(cfg['D']))
+# def vgg16():
+#     """VGG 16-layer model (configuration "D")"""
+#     return VGG(make_layers(cfg['D']))
 
 
 def vgg16_bn():
@@ -222,11 +222,11 @@ def vgg16_bn():
     return VGG(make_layers(cfg['D'], batch_norm=True))
 
 
-def vgg19():
-    """VGG 19-layer model (configuration "E")"""
-    return VGG(make_layers(cfg['E']))
+# def vgg19():
+#     """VGG 19-layer model (configuration "E")"""
+#     return VGG(make_layers(cfg['E']))
 
 
-def vgg19_bn():
-    """VGG 19-layer model (configuration 'E') with batch normalization"""
-    return VGG(make_layers(cfg['E'], batch_norm=True))
+# def vgg19_bn():
+#     """VGG 19-layer model (configuration 'E') with batch normalization"""
+#     return VGG(make_layers(cfg['E'], batch_norm=True))

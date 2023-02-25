@@ -19,7 +19,7 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, filename='checkpoint.pth.tar'):
     """
     Save the training model
     """
@@ -31,7 +31,3 @@ def prepare_for_training(save_dir, device):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
-    if device == torch.device('cpu'):
-        print("Running on CPU")
-    else:
-        print("Running on GPU")

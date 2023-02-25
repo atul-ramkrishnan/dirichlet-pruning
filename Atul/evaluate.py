@@ -69,13 +69,12 @@ def evaluate(val_loader, model, criterion, print_freq, device):
     return top1.avg
 
 
-def evaluate(model, layer, batch_size, workers, device):
+def evaluate(val_loader, model, layer, device):
     # print('Prediction when network is forced to predict')
-    test_loader = get_test_loader(batch_size=batch_size, shuffle=False, num_workers=workers, pin_memory=True)
     model.eval()
     correct = 0
     total = 0
-    for j, data in enumerate(test_loader):
+    for j, data in enumerate(val_loader):
         images, labels = data
         images = images.to(device)
         #dummy works as it should, if we don't execute switch function in forward the accuracy should be original, 99.27
