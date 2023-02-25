@@ -156,7 +156,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
 
-    model = vgg.vgg16_bn(distribution=method, switch_samps=switch_samps, layer=layer, device=device).to(device)
+    model = vgg.vgg16_bn(distribution=method, switch_samps=switch_samps, hidden_dim=layer, device=device).to(device)
     # criterion = nn.CrossEntropyLoss()
 
     if os.path.isfile(resume):
