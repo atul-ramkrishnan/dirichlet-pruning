@@ -1,6 +1,24 @@
 import time
+import numpy as np
 import torch
-from util import AverageMeter, accuracy
+from util import AverageMeter
+from dataloader import get_test_loader
+
+
+def accuracy(output, target, topk=(1,)):
+    """Computes the precision@k for the specified values of k"""
+    maxk = max(topk)
+    batch_size = target.size(0)
+
+    _, pred = output.topk(maxk, 1, True, True)
+    pred = pred.t()
+    correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+    res = []
+    for k in topk:
+        correct_k = correct[:k].view(-1).float().sum(0)
+        res.append(correct_k.mul_(100.0 / batch_size))
+    return res
 
 
 def evaluate(val_loader, model, criterion, print_freq, device):
@@ -50,6 +68,27 @@ def evaluate(val_loader, model, criterion, print_freq, device):
 
     return top1.avg
 
+
+def evaluate(model, layer, batch_size, workers, device):
+    # print('Prediction when network is forced to predict')
+    test_loader = get_test_loader(batch_size=batch_size, shuffle=False, num_workers=workers, pin_memory=True)
+    model.eval()
+    correct = 0
+    total = 0
+    for j, data in enumerate(test_loader):
+        images, labels = data
+        images = images.to(device)
+        #dummy works as it should, if we don't execute switch function in forward the accuracy should be original, 99.27
+        #predicted_prob = model.forward(images, "dummy")[0]  # if using switches
+        #predicted_prob = model.forward(images, "c1")[0] #13.68 for 99.27
+        #predicted_prob = model.forward(images, "c3")[0] #11.35
+        predicted_prob = model.forward(images, layer)[0]
+        predicted = np.argmax(predicted_prob.cpu().detach().numpy(), axis=1)
+        total += labels.size(0)
+        correct += (predicted == labels.numpy()).sum().item()
+    accuracy = 100 * float(correct) / total
+    print("accuracy: %.2f %%" % (accuracy))
+    return accuracy
 
 def get_test_accuracy(print_freq, device):
     pass

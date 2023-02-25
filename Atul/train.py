@@ -70,13 +70,8 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
 
 
 
-def train(model_type, save_dir, cpu, resume, eval, batch_size, workers, lr, momentum, weight_decay, start_epoch, epochs, print_freq):
-    prepare_for_training(save_dir, cpu)
-    
-    if cpu:
-        device = torch.device('cpu')
-    else:
-        device = torch.device('cuda')
+def train(model_type, save_dir, device, resume, eval, batch_size, workers, lr, momentum, weight_decay, start_epoch, epochs, print_freq):
+    prepare_for_training(save_dir, device)
     
     # Only support VGG16_BN for now
     model = vgg.vgg16_bn()
@@ -128,7 +123,7 @@ def train(model_type, save_dir, cpu, resume, eval, batch_size, workers, lr, mome
         }, is_best, filename=os.path.join(save_dir, f'checkpoint_{model_type}_epoch{epoch}.tar'))
 
 
-def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, annealing_rate, device):
+def loss_function_dirichlet(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, annealing_rate, device):
     cross_entropy = nn.functional.cross_entropy(prediction, true_y)
     # KLD term
     alpha_0 = torch.Tensor([alpha_0]).to(device)
@@ -154,7 +149,7 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
     return cross_entropy + annealing_rate * KLD / how_many_samps
 
 
-def train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, device, resume, batch_size, workers):
+def train_one_importance_switch(method, lr, epochs, layer, switch_samps, device, resume, batch_size, workers, print_freq):
     train_loader, val_loader = get_train_valid_loader('./dataset',
                                                     batch_size,
                                                     augment=True,
@@ -184,7 +179,6 @@ def train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, de
     annealing_steps = float(8000. * how_many_epochs)
     beta_func = lambda s: min(s, annealing_steps) / annealing_steps
 
-    # while (stop<early_stopping):
     for epochs in range(epochs):
         epoch=epoch+1
         annealing_rate = beta_func(epoch)
@@ -194,28 +188,21 @@ def train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, de
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs, S=model(inputs, layer) #when switc hes
-            #outputs=net2(inputs)
-            #loss=criterion(outputs, labels)
+            outputs, S = model(inputs, layer)
             alpha_0 = 2
-            loss = loss_functionKL(outputs, labels, S, alpha_0, vgg.hidden_dims[layer], batch_size, annealing_rate)
-            #loss=loss_function(outputs, labels, 1, 1, 1, 1)
+            loss = loss_function_dirichlet(outputs, labels, S, alpha_0, vgg.hidden_dims[layer], batch_size, annealing_rate)
             loss.backward()
             #print(net2.c1.weight.grad[1, :])
             #print(net2.c1.weight[1, :])
             optimizer.step()
-            # if i % 100==0:
-            #    print (i)
-            #    print (loss.item())
-            #    evaluate()
+            if i % print_freq == 0:
+               print (i)
+               print (loss.item())
+               evaluate()
         #print (i)
         print (loss.item())
         accuracy=evaluate(model, layer)
         print ("Epoch " +str(epoch)+ " ended.")
-        # for name, param in net2.named_parameters():
-        #     print(name)
-        #     print(param[1])
-
 
         print("S")
         print(S)
@@ -242,12 +229,23 @@ def train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, de
     return best_accuracy, epoch, best_model, S
 
 
-def train_importance_switches(method, switch_samps, cpu, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
+def train_importance_switches(method, switch_samps, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
     switch_data={}
     switch_data['combinationss'] = []
     switch_data['switches'] = []
     for layer in vgg.hidden_dims.keys():
-        best_accuracy, epoch, best_model, S = train_one_importance_switch(method, cpu, lr, epochs, layer, switch_samps, device, resume, batch_size, workers)
+        best_accuracy, epoch, best_model, S = train_one_importance_switch(
+                                                                        method,
+                                                                        layer,
+                                                                        switch_samps,
+                                                                        resume,
+                                                                        batch_size,
+                                                                        lr,
+                                                                        epochs,
+                                                                        device,
+                                                                        workers,
+                                                                        print_freq
+                                                                        )
         print("Rank for switches from most important/largest to smallest after %s " %  str(epochs))
         print(S)
         print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
@@ -256,6 +254,6 @@ def train_importance_switches(method, switch_samps, cpu, resume, batch_size, wor
         switch_data['combinationss'].append(ranks_sorted); switch_data['switches'].append(S.cpu().detach().numpy())
     print('*'*30)
     print(switch_data['combinationss'])
-    combinationss=switch_data['combinationss']
+    # combinationss=switch_data['combinationss']
     file_path=os.path.join(save_dir, 'importance_switches', method, f"switch_samps_{switch_samps}_epochs_{epochs}")
     np.save(file_path, switch_data)

@@ -22,7 +22,7 @@ class Distribution(Enum):
     DIRICHLET = 1
     GENERALIZED_DIRICHLET = 2
 
-split ={
+split = {
     "conv1": 1,
     "conv2": 4,
     "conv3": 8,

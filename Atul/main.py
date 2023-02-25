@@ -2,6 +2,7 @@ import argparse
 from train import train, train_importance_switches
 from evaluate import get_test_accuracy
 from prune import prune_and_retrain
+import torch
 
 parser = argparse.ArgumentParser(description="Dirichlet Pruning")
 required = parser.add_argument_group('required arguments')
@@ -42,12 +43,12 @@ optional.add_argument("--switch_samps", default=150, type=int)
 
 def main():
     args=parser.parse_args()
-
+    device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
     if args.mode == "train_original":
         train(
             model_type=args.mode,
             save_dir=args.save_dir,
-            cpu=args.cpu,
+            device=device,
             resume=args.resume,
             eval=args.evaluate,
             batch_size=args.batch_size,
@@ -64,7 +65,7 @@ def main():
         train_importance_switches(
                                 method=args.method,
                                 switch_samps=args.switch_samps,
-                                cpu=args.cpu,
+                                device=device,
                                 resume=args.resume,
                                 batch_size=args.batch_size,
                                 workers=args.workers,
@@ -74,7 +75,22 @@ def main():
                                 save_dir=args.save_dir
                                 )
     elif args.mode == "prune_and_retrain":
-        prune_and_retrain()
+        prune_and_retrain(
+                        switch_save_path=args.switch_save_path,
+                        thresholds=args.thresholds,
+                        model_save_dir=args.model_save_dir,
+                        device=device,
+                        resume=args.resume,
+                        eval=args.evaluate,
+                        batch_size=args.batch_size,
+                        workers=args.workers,
+                        lr=args.lr,
+                        momentum=args.momentum,
+                        weight_decay=args.weight_decay,
+                        start_epoch=args.start_epoch,
+                        epochs=args.epochs,
+                        print_freq=args.print_freq
+                        )
     elif args.mode == "evaluate_original":
         pass
     elif args.mode == "evaluate_compressed":
