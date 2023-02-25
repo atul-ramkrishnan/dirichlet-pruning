@@ -1,5 +1,12 @@
 import torch
 import os
+from enum import Enum
+
+
+class Method(Enum):
+    DIRICHLET = 1
+    GENERALIZED_DIRICHLET = 2
+
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -30,4 +37,3 @@ def create_dir_if_not_exists(save_dir):
     # Check the save_dir exists or not
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-

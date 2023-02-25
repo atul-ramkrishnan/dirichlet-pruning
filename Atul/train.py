@@ -7,9 +7,8 @@ import torch.optim as optim
 import torch.utils.data
 import vgg
 from dataloader import get_train_valid_loader
-from util import AverageMeter, save_checkpoint, create_dir_if_not_exists
+from util import AverageMeter, save_checkpoint, create_dir_if_not_exists, Method
 from evaluate import evaluate, evaluate_switch_at_layer, accuracy
-from main import Method
 
 
 def adjust_learning_rate(optimizer, lr, epoch):

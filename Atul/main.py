@@ -1,9 +1,9 @@
 import argparse
-from enum import Enum
 from train import train, train_importance_switches
 from evaluate import get_test_accuracy
 from prune import prune_and_retrain
 import torch
+from util import Method
 
 
 parser = argparse.ArgumentParser(description="Dirichlet Pruning")
@@ -42,9 +42,6 @@ optional.add_argument('--save-dir',
                     default='saved', type=str)
 optional.add_argument("--switch_samps", default=150, type=int)
 
-class Method(Enum):
-    DIRICHLET = 1
-    GENERALIZED_DIRICHLET = 2
 
 def main():
     args=parser.parse_args()
@@ -89,7 +86,7 @@ def main():
                                 )
     elif args.mode == "prune_and_retrain":
         print("Pruning and retraining...")
-        
+
         if args.method == "dirichlet":
             method = Method.DIRICHLET
         elif args.method == "generalized_dirichlet":
