@@ -3,6 +3,7 @@ from train import train, train_importance_switches
 from evaluate import get_test_accuracy
 from prune import prune_and_retrain
 import torch
+from util import create_dir_if_not_exists
 
 parser = argparse.ArgumentParser(description="Dirichlet Pruning")
 required = parser.add_argument_group('required arguments')
@@ -37,7 +38,7 @@ optional.add_argument('--cpu', dest='cpu', action='store_true',
                     help='use cpu')
 optional.add_argument('--save-dir',
                     help='The directory used to save the trained models',
-                    default='saved_models', type=str)
+                    default='saved', type=str)
 optional.add_argument("--switch_samps", default=150, type=int)
 
 
@@ -46,6 +47,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() and not args.cpu else "cpu")
     print(f"Running on {device}...")
     if args.mode == "train_original":
+        create_dir_if_not_exists(args.save_dir)
         print("Training the original (uncompressed) network...")
         train(
             model_type=args.mode,
@@ -65,6 +67,7 @@ def main():
 
     elif args.mode == "train_importance_switches":
         print(f"Training the importance switches using the \"{args.method}\" method...")
+        create_dir_if_not_exists(args.save_dir)
         train_importance_switches(
                                 method=args.method,
                                 switch_samps=args.switch_samps,
@@ -79,10 +82,11 @@ def main():
                                 )
     elif args.mode == "prune_and_retrain":
         print("Pruning and retraining...")
+        create_dir_if_not_exists(args.save_dir)
         prune_and_retrain(
                         switch_save_path=args.switch_save_path,
                         thresholds=args.thresholds,
-                        model_save_dir=args.model_save_dir,
+                        model_save_dir=args.save_dir,
                         device=device,
                         resume=args.resume,
                         eval=args.evaluate,

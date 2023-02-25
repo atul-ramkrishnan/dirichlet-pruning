@@ -7,7 +7,7 @@ import torch.optim as optim
 import torch.utils.data
 import vgg
 from dataloader import get_train_valid_loader
-from util import AverageMeter, save_checkpoint, prepare_for_training, accuracy
+from util import AverageMeter, save_checkpoint, accuracy
 from evaluate import evaluate
 
 
@@ -71,7 +71,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
 
 
 def train(model_type, save_dir, device, resume, eval, batch_size, workers, lr, momentum, weight_decay, start_epoch, epochs, print_freq):
-    prepare_for_training(save_dir, device)
     
     # Only support VGG16_BN for now
     model = vgg.vgg16_bn()

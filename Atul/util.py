@@ -26,7 +26,7 @@ def save_checkpoint(state, filename='checkpoint.pth.tar'):
     torch.save(state, filename)
 
 
-def prepare_for_training(save_dir, device):
+def create_dir_if_not_exists(save_dir):
     # Check the save_dir exists or not
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
