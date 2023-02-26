@@ -130,9 +130,9 @@ class VGG(nn.Module):
 
         if switch_layer is not None:
             if switch_layer in vgg16_split:
-                x = self.features[:vgg16_split[switch_layer]]
+                x = self.features[:vgg16_split[switch_layer]](x)
                 x, SstackT_ret=self.switch_multiplication(x, SstackT)
-                x = self.features[vgg16_split[switch_layer]:]
+                x = self.features[vgg16_split[switch_layer]:](x)
             x = x.view(x.size(0), -1)
             x = self.fc_1(x)
             if switch_layer == "fc_1":
