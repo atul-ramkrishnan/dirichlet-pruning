@@ -187,26 +187,27 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
     how_many_epochs = 200
     annealing_steps = float(8000. * how_many_epochs)
     beta_func = lambda s: min(s, annealing_steps) / annealing_steps
+    losses = AverageMeter()
 
     for epochs in range(epochs):
         epoch=epoch+1
         annealing_rate = beta_func(epoch)
         model.train()
         # evaluate_switch_at_layer(val_loader, model, layer, device)
-        for i, data in enumerate(train_loader):
-            inputs, labels=data
-            inputs, labels=inputs.to(device), labels.to(device)
-            optimizer.zero_grad()
-            outputs, S = model(inputs, layer)
+        for i, (input, labels) in enumerate(train_loader):
+            input, labels = input.to(device), labels.to(device)
+            outputs, S = model(input, layer)
             alpha_0 = 2
             loss = loss_function_dirichlet(outputs, labels, S, alpha_0, vgg.vgg16_hidden_dims[layer], batch_size, annealing_rate, device)
+            optimizer.zero_grad()
+            optimizer.step()
             loss.backward()
+            losses.update(loss.item(), input.size(0))
             #print(net2.c1.weight.grad[1, :])
             #print(net2.c1.weight[1, :])
-            optimizer.step()
             if i % print_freq == 0:
                print (i)
-               print (loss.item())
+               print (losses)
             #    evaluate()
         #print (i)
         print (loss.item())
