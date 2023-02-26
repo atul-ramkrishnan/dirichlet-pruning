@@ -80,7 +80,8 @@ def evaluate_switch_at_layer(val_loader, model, layer, device):
         #predicted_prob = model.forward(images, "dummy")[0]  # if using switches
         #predicted_prob = model.forward(images, "c1")[0] #13.68 for 99.27
         #predicted_prob = model.forward(images, "c3")[0] #11.35
-        predicted_prob = model.forward(images, layer)[0]
+        with torch.no_grad():
+            predicted_prob = model.forward(images, layer)[0]
         predicted = np.argmax(predicted_prob.cpu().detach().numpy(), axis=1)
         total += labels.size(0)
         correct += (predicted == labels.numpy()).sum().item()
