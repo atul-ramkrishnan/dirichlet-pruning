@@ -207,7 +207,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
             #print(net2.c1.weight[1, :])
             if i % print_freq == 0:
                print (i)
-               print (losses)
+               print (losses.val)
             #    evaluate()
         #print (i)
         print (loss.item())
