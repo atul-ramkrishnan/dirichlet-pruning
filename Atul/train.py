@@ -200,8 +200,8 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
             alpha_0 = 2
             loss = loss_function_dirichlet(outputs, labels, S, alpha_0, vgg.vgg16_hidden_dims[layer], batch_size, annealing_rate, device)
             optimizer.zero_grad()
-            optimizer.step()
             loss.backward()
+            optimizer.step()
             losses.update(loss.item(), input.size(0))
             #print(net2.c1.weight.grad[1, :])
             #print(net2.c1.weight[1, :])
