@@ -230,6 +230,9 @@ def train(thresh=[-1,-1,-1,-1]):
             # net.c1.bias.data[1] = 0  # instead of hook
             # print(net.c1.weight.data[1])
             # print(net.c1.weight.grad[1])
+            print("<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>")
+            print(net.f6.bias.data)
+            print(net.f6.bias.grad)
 
         print(f"Loss: {loss.item()}")
         accuracy = evaluate()
@@ -465,8 +468,8 @@ def threshold_prune_and_retrain(combinationss, thresh):
                     # print(param.data)
                 if (("c" in name) or ("f" in name)) and ("bias" in name):
                     param.data[combinationss[it - 1]] = 0
-                    print("<<<<<<<<---------------------->>>>>>>")
-                    print(param.data)
+                    # print("<<<<<<<<---------------------->>>>>>>")
+                    # print(param.data)
                 if ("bn" in name) and ("weight" in name):
                     param.data[combinationss[it - 1]] = 0
                 if ("bn" in name) and ("bias" in name):
