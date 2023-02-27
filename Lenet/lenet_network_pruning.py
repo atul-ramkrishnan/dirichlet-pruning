@@ -166,10 +166,10 @@ def load_model(path_checkpoint_load, net=net):
 # EVALUATE
 
 def evaluate(net=net, evaluation="test"):
-    for name, param in net.named_parameters():
-        print(name)
-        print(param)
-    print(f'\nEvaluating model on {evaluation} dataset')
+    # for name, param in net.named_parameters():
+    #     print(name)
+    #     print(param)
+    # print(f'\nEvaluating model on {evaluation} dataset')
     net.eval()
     correct = 0
     total = 0
@@ -465,7 +465,8 @@ def threshold_prune_and_retrain(combinationss, thresh):
                     # print(param.data)
                 if (("c" in name) or ("f" in name)) and ("bias" in name):
                     param.data[combinationss[it - 1]] = 0
-                    # print(param.data)
+                    print("<<<<<<<<---------------------->>>>>>>")
+                    print(param.data)
                 if ("bn" in name) and ("weight" in name):
                     param.data[combinationss[it - 1]] = 0
                 if ("bn" in name) and ("bias" in name):
