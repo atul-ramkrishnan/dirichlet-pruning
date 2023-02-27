@@ -399,7 +399,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
 
 
     print("Evaluate:\n")
-    evaluate(net2, layer)
+    # evaluate(net2, layer)
     # for name, param in net.named_parameters():
     #     print(name)
     #     print(param[1])
@@ -410,7 +410,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     #     if name!="parameter":
     #         param.requires_grad=False
     #     print(param.requires_grad)
-    accuracy=evaluate(net2, layer)
+    # accuracy=evaluate(net2, layer)
 
 
     h = net2.c1.weight.register_hook(lambda grad: grad * 0)  # double the gradient
@@ -428,7 +428,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     h = net2.f7.weight.register_hook(lambda grad: grad * 0)  # double the gradient
     h = net2.f7.bias.register_hook(lambda grad: grad * 0)  # double the gradient
 
-    accuracy = evaluate(net2, layer)
+    # accuracy = evaluate(net2, layer)
 
     #print("Retraining\n")
     net2.train()
