@@ -440,7 +440,7 @@ def threshold_prune_and_retrain(combinationss, thresh):
     # combinationss=combinationss[0]
     for i in range(len(combinationss)):
         print(f"<---------combinations[{i}]---------->", combinationss[i])
-        combinationss[i] = torch.LongTensor(combinationss[i][:thresh[i]].copy())
+        combinationss[i] = torch.LongTensor(combinationss[i][thresh[i]:].copy())
         print(f"After thresholding, ", combinationss[i])
 
     print("\n\nPrunedto:%d_%d_%d_%d\n" % (thresh[0], thresh[1], thresh[2], thresh[3]))
