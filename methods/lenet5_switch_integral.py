@@ -409,7 +409,8 @@ def loss_functionKL(prediction, true_y, S, alpha_0, hidden_dim, how_many_samps, 
         print("KL divergence", KLD)
         print("\n")
 
-    return BCE + annealing_rate * KLD / how_many_samps
+    return BCE
+    # return BCE + annealing_rate * KLD / how_many_samps
 
 # KL-divergence between two Generalized Dirichlet distributions. Cannot do D * alpha_0 / beta_0 as sum includes other terms.
 # Instead create a tensor filled with alpha_0 / beta_0 value of size phi_alpha / phi_beta
