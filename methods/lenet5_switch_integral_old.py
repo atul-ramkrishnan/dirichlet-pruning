@@ -509,7 +509,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             #    print (loss.item())
             #    evaluate()
         #print (i)
-        print (losses.avg())
+        print (losses.avg)
         accuracy=evaluate(net2, layer)
         print ("Epoch " +str(epoch)+ " ended.")
         # for name, param in net2.named_parameters():
