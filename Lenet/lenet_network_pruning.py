@@ -166,6 +166,9 @@ def load_model(path_checkpoint_load, net=net):
 # EVALUATE
 
 def evaluate(net=net, evaluation="test"):
+    for name, param in net.named_parameters():
+        print(name)
+        print(param)
     print(f'\nEvaluating model on {evaluation} dataset')
     net.eval()
     correct = 0
