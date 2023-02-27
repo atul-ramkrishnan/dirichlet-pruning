@@ -170,6 +170,8 @@ def evaluate(net=net, evaluation="test"):
     #     print(name)
     #     print(param)
     # print(f'\nEvaluating model on {evaluation} dataset')
+    print("<><><><><><><><><><>")
+    print(net.f6.bias.data)
     net.eval()
     correct = 0
     total = 0
@@ -230,9 +232,9 @@ def train(thresh=[-1,-1,-1,-1]):
             # net.c1.bias.data[1] = 0  # instead of hook
             # print(net.c1.weight.data[1])
             # print(net.c1.weight.grad[1])
-            print("<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>")
-            print(net.f6.bias.data)
-            print(net.f6.bias.grad)
+            # print("<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>")
+            # print(net.f6.bias.data)
+            # print(net.f6.bias.grad)
 
         print(f"Loss: {loss.item()}")
         accuracy = evaluate()
