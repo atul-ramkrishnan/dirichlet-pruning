@@ -99,6 +99,29 @@ def softplus_inverse(x):
 
 ##############################################################################
 # NETWORK (conv-conv-fc-fc)
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def restore(self, val, avg, sum, count):
+        self.val = val
+        self.avg = avg
+        self.sum = sum
+        self.count = count
+        
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
 
 class Lenet(nn.Module):
     def __init__(self, nodesNum1, nodesNum2, nodesFc1, nodesFc2, layer, num_samps_for_switch):
@@ -533,12 +556,13 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     stop=0; epoch=0; best_accuracy=0; entry=np.zeros(3); best_model=-1
     # while (stop<early_stopping):
     for epochs in range(epochs_num):
+        losses = AverageMeter()
         epoch=epoch+1
         print("Epoch: ", epoch)
         annealing_rate = beta_func(epoch)
         net2.train()
-        print("Evaluate network before training")
-        evaluate(net2, layer)
+        # print("Evaluate network before training")
+        # evaluate(net2, layer)
         for i, data in enumerate(train_loader):
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
@@ -551,6 +575,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             loss = loss_functionKL_GD(outputs, labels, phi_alpha, phi_beta, alpha_0_param, BATCH_SIZE, annealing_rate)
             #loss=loss_function(outputs, labels, 1, 1, 1, 1)
             loss.backward()
+            losses.update(loss.item(), inputs.size(0))
             # print("phi_alpha: ", phi_alpha)
             # print("phi_beta: ", phi_beta)
             # print("mean: ", mean_GD(phi_alpha, phi_beta))
@@ -564,9 +589,8 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             #    print (loss.item())
             #    evaluate()
         #print (i)
-        print ("Loss: ", loss.item())
-        print("Evaluate network after training")
-        accuracy=evaluate(net2, layer)
+        print ("Loss: ", losses.avg)
+        evaluate(net2, layer)
         print ("Epoch " +str(epoch)+ " ended.")
         # for name, param in net2.named_parameters():
         #     print(name)

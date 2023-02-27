@@ -485,7 +485,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
         losses = AverageMeter()
         annealing_rate = beta_func(epoch)
         net2.train()
-        evaluate(net2, layer)
+        # evaluate(net2, layer)
         for i, data in enumerate(train_loader):
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
