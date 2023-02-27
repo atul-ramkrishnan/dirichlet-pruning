@@ -498,7 +498,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             loss = loss_functionKL(outputs, labels, S, alpha_0, hidden_dim, BATCH_SIZE, annealing_rate)
             #loss=loss_function(outputs, labels, 1, 1, 1, 1)
             loss.backward()
-            losses.update(loss.item(), input.size(0))
+            losses.update(loss.item(), inputs.size(0))
             # print("net.parameter.grad:")
             # print(net2.parameter.grad)
             #print(net2.c1.weight.grad[1, :])
