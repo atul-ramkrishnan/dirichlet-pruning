@@ -443,8 +443,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
             plt.imshow(np.transpose(inputs[0].cpu().detach().numpy(), (1, 2, 0)))
-            plt.savefig('test.png')
-            # plt.show()
+            plt.show()
             break
             optimizer.zero_grad()
             outputs, S=net2(inputs, layer) #when switc hes
