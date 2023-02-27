@@ -438,7 +438,7 @@ def threshold_prune_and_retrain(combinationss, thresh):
     '''
     # What does this do? Seems dubious. The stable version does not have this. Commented it out for now.
     # combinationss=combinationss[0]
-    combinationss = combinationss.reverse()
+    combinationss.reverse()
     for i in range(len(combinationss)):
         combinationss[i] = torch.LongTensor(combinationss[i][thresh[i]:].copy())
     print("\n\nPrunedto:%d_%d_%d_%d\n" % (thresh[0], thresh[1], thresh[2], thresh[3]))
