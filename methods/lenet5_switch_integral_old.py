@@ -96,6 +96,29 @@ train_loader, test_loader, val_loader = load_fashionmnist(BATCH_SIZE, 1.0)
 
 ##############################################################################
 # NETWORK (conv-conv-fc-fc)
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def restore(self, val, avg, sum, count):
+        self.val = val
+        self.avg = avg
+        self.sum = sum
+        self.count = count
+        
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
 
 class Lenet(nn.Module):
     def __init__(self, nodesNum1, nodesNum2, nodesFc1, nodesFc2, layer, num_samps_for_switch):
@@ -459,6 +482,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     # while (stop<early_stopping):
     for epochs in range(epochs_num):
         epoch=epoch+1
+        losses = AverageMeter()
         annealing_rate = beta_func(epoch)
         net2.train()
         evaluate(net2, layer)
@@ -474,6 +498,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             loss = loss_functionKL(outputs, labels, S, alpha_0, hidden_dim, BATCH_SIZE, annealing_rate)
             #loss=loss_function(outputs, labels, 1, 1, 1, 1)
             loss.backward()
+            losses.update(loss.item(), input.size(0))
             # print("net.parameter.grad:")
             # print(net2.parameter.grad)
             #print(net2.c1.weight.grad[1, :])
@@ -484,7 +509,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             #    print (loss.item())
             #    evaluate()
         #print (i)
-        print (loss.item())
+        print (losses.average())
         accuracy=evaluate(net2, layer)
         print ("Epoch " +str(epoch)+ " ended.")
         # for name, param in net2.named_parameters():
