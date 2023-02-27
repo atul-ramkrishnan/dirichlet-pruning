@@ -34,6 +34,14 @@ import os
 import matplotlib.pyplot as plt
 from torch.nn.parameter import Parameter
 from torch.distributions import Gamma
+from importlib.machinery import SourceFileLoader
+
+dataset_mnist = SourceFileLoader("module_mnist", "../dataloaders/dataset_mnist.py").load_module()
+dataset_fashionmnist = SourceFileLoader("module_fashionmnist", "../dataloaders/dataset_fashionmnist.py").load_module()
+model_lenet5 = SourceFileLoader("module_lenet", "../models/lenet5.py").load_module()
+from module_fashionmnist import load_fashionmnist
+from module_mnist import load_mnist
+from module_lenet import Lenet
 
 
 device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -81,6 +89,8 @@ test_loader = torch.utils.data.DataLoader(
     batch_size=BATCH_SIZE, shuffle=False)
 
 dataset="mnist"
+
+train_loader, test_loader, val_loader = load_fashionmnist(BATCH_SIZE, 1.0)
 
 ##################
 
@@ -442,11 +452,8 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
         for i, data in enumerate(train_loader):
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
-            plt.imshow(np.transpose(inputs[0].cpu().detach().numpy(), (1, 2, 0)))
-            print(os.getcwd())
-            plt.savefig('./test')
-            # plt.show()
-            break
+            # plt.imshow(np.transpose(inputs[0].cpu().detach().numpy(), (1, 2, 0)))
+            # plt.savefig('./test')
             optimizer.zero_grad()
             outputs, S=net2(inputs, layer) #when switc hes
             #outputs=net2(inputs)
