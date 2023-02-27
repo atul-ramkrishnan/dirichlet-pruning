@@ -343,7 +343,7 @@ def get_ranks(method, path_checkpoint):
         switch_data={}; switch_data['combinationss'] = []; switch_data['switches']=[]
         num_samps_for_switch=args.switch_samps
         print("integral evaluation")
-        epochs_num = 3
+        epochs_num = 1
         # Hardcoded. Fix later
         file_path=os.path.join(path_main, 'methods/results/switch_data_%s_9927_integral_samps_%s_epochs_%i.npy' % (dataset, str(num_samps_for_switch), epochs_num))
         if getranks_method=='train':
@@ -369,7 +369,7 @@ def get_ranks(method, path_checkpoint):
         switch_data={}; switch_data['combinationss'] = []; switch_data['switches']=[]
         num_samps_for_switch=args.switch_samps
         print("integral evaluation")
-        epochs_num = 3
+        epochs_num = 1
         # Hardcoded. Fix later
         file_path=os.path.join(path_main, 'methods/results/switch_data_%s_9927_integral_samps_%s_epochs_%i.npy' % (dataset, str(num_samps_for_switch), epochs_num))
         if getranks_method=='train':
@@ -438,6 +438,7 @@ def threshold_prune_and_retrain(combinationss, thresh):
     '''
     # What does this do? Seems dubious. The stable version does not have this. Commented it out for now.
     # combinationss=combinationss[0]
+    combinationss = combinationss.reverse()
     for i in range(len(combinationss)):
         combinationss[i] = torch.LongTensor(combinationss[i][thresh[i]:].copy())
     print("\n\nPrunedto:%d_%d_%d_%d\n" % (thresh[0], thresh[1], thresh[2], thresh[3]))
