@@ -31,7 +31,7 @@ import numpy as np
 import csv
 import pdb
 import os
-
+import matplotlib.pyplot as plt
 from torch.nn.parameter import Parameter
 from torch.distributions import Gamma
 
@@ -442,6 +442,8 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
         for i, data in enumerate(train_loader):
             inputs, labels=data
             inputs, labels=inputs.to(device), labels.to(device)
+            plt.imshow(np.transpose(inputs[0].cpu().detach().numpy(), (1, 2, 0)))
+            break
             optimizer.zero_grad()
             outputs, S=net2(inputs, layer) #when switc hes
             #outputs=net2(inputs)
