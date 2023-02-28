@@ -28,7 +28,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
     # switch to train mode
     model.train()
 
-    end = time.time()
     for i, (input, target) in enumerate(train_loader):
         input = input.to(device)
         target = target.to(device)
