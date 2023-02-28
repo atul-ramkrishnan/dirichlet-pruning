@@ -207,7 +207,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
         print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
 
         is_best = acc > best_accuracy
-        best_accuracy = max(accuracy, best_accuracy)
+        best_accuracy = max(acc, best_accuracy)
         if is_best:
             print("Rank for switches from most important/largest to smallest after %s " %  str(epochs))
             print(S)
