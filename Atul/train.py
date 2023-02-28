@@ -166,6 +166,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
     elif os.path.isfile(original):
         print("=> importance switch training from scratch")
         print("=> loading original (uncompressed) model '{}'".format(original))
+        checkpoint = torch.load(original)
         model.load_state_dict(checkpoint['state_dict'], strict=False)
 
     else:
