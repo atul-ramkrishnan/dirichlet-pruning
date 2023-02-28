@@ -13,6 +13,12 @@ class AverageMeter(object):
     def __init__(self):
         self.reset()
 
+    def restore(self, val, avg, sum, count):
+        self.val = val
+        self.avg = avg
+        self.sum = sum
+        self.count = count
+        
     def reset(self):
         self.val = 0
         self.avg = 0

@@ -86,7 +86,6 @@ def evaluate_switch_at_layer(val_loader, model, layer, device):
         total += labels.size(0)
         correct += (predicted == labels.numpy()).sum().item()
     accuracy = 100 * float(correct) / total
-    print("accuracy: %.2f %%" % (accuracy))
     return accuracy
 
 def get_test_accuracy(print_freq, device):

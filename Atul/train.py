@@ -151,7 +151,7 @@ def loss_function_dirichlet(prediction, true_y, S, alpha_0, hidden_dim, how_many
     return cross_entropy + annealing_rate * KLD / how_many_samps
 
 
-def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, layer, switch_samps, device, resume, batch_size, workers, print_freq, save_dir):
+def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, start_epoch, layer, switch_samps, device, resume, original, batch_size, print_freq, save_dir):
 
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
@@ -162,38 +162,43 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
         method = Method.GENERALIZED_DIRICHLET
 
     model = vgg.vgg16_bn(method=method, switch_samps=switch_samps, hidden_dim=layer, device=device).to(device)
-    # criterion = nn.CrossEntropyLoss()
-
-    if os.path.isfile(resume):
-        print("=> loading checkpoint '{}'".format(resume))
-        checkpoint = torch.load(resume)
-        model.load_state_dict(checkpoint['state_dict'], strict=False)
-        print("=> loaded checkpoint '{}' (epoch {})"
-                .format(eval, checkpoint['epoch']))
-    else:
-        print("=> no checkpoint found at '{}'".format(resume))
 
     if method == Method.DIRICHLET:
         optimizer = optim.Adam([model.switch_parameter_alpha], lr=lr)
+
     elif method == Method.GENERALIZED_DIRICHLET:
         pass
 
+    losses = AverageMeter()
+    if os.path.isfile(resume):
+        print("=> resuming importance switch training")
+        print("=> loading checkpoint '{}'".format(resume))
+        checkpoint = torch.load(resume)
+        model.load_state_dict(checkpoint['state_dict'], strict=True)
+        optimizer.load_state_dict(checkpoint['optim_state_dict'])
+        print("=> loaded checkpoint '{}' (epoch {})"
+                .format(eval, checkpoint['epoch']))
+
+    elif os.path.isfile(original):
+        print("=> importance switch training from scratch")
+        print("=> loading original (uncompressed) model '{}'".format(original))
+        model.load_state_dict(checkpoint['state_dict'], strict=False)
+
+    else:
+        raise Exception("Cannot continue")
+
     model.train()
-    stop = 0
-    epoch = 0
     best_accuracy = 0
-    entry = np.zeros(3)
-    best_model = -1
     how_many_epochs = 200
     annealing_steps = float(8000. * how_many_epochs)
     beta_func = lambda s: min(s, annealing_steps) / annealing_steps
-    losses = AverageMeter()
 
-    for epochs in range(epochs):
-        epoch=epoch+1
+    for epoch in range(start_epoch, epochs):
+        print(f"<--------------------------------------Begin Epoch {epoch}-------------------------------------->")
+        if os.path.isfile(resume):
+            losses.restore(checkpoint['losses.val'], checkpoint['losses.avg'], checkpoint['losses.sum'], checkpoint['losses.count'])
         annealing_rate = beta_func(epoch)
         model.train()
-        # evaluate_switch_at_layer(val_loader, model, layer, device)
         for i, (input, labels) in enumerate(train_loader):
             input, labels = input.to(device), labels.to(device)
             outputs, S = model(input, layer)
@@ -203,83 +208,69 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, la
             loss.backward()
             optimizer.step()
             losses.update(loss.item(), input.size(0))
-            #print(net2.c1.weight.grad[1, :])
-            #print(net2.c1.weight[1, :])
             if i % print_freq == 0:
                print (i)
-               print (losses.val)
-            #    evaluate()
-        #print (i)
-        print (loss.item())
-        accuracy = evaluate_switch_at_layer(val_loader, model, layer, device)
-        print ("Epoch " +str(epoch)+ " ended.")
+               print (losses.avg)
+               losses.reset()
+        print(f"Accuracy at end of epoch {epoch}", evaluate_switch_at_layer(val_loader, model, layer, device))
 
         print("S")
         print(S)
+        print("Channels from most important to least important")
         print(torch.argsort(S))
         print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
 
-        if (accuracy<=best_accuracy):
-            stop=stop+1
-            entry[2]=0
-        else:
-            best_accuracy=accuracy
+        is_best = accuracy > best_accuracy
+        best_accuracy = max(accuracy, best_accuracy)
+        if is_best:
+            print("Rank for switches from most important/largest to smallest after %s " %  str(epochs))
+            print(S)
+            print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
             print("Best updated")
-            stop=0
-            entry[2]=1
-            best_model=model.state_dict()
-            best_optim=optimizer.state_dict()
+            if os.path.isfile(resume):
+                print("=> loading checkpoint '{}'".format(resume))
+                checkpoint = torch.load(resume)
+                importance_switches = checkpoint['importance_switches']
+            else:
+                importance_switches = {key:[] for key in list(vgg.vgg16_hidden_dims)}
+
+            importance_switches[layer] = S
             save_checkpoint({
-            'epoch': epoch + 1,
-            'state_dict': model.state_dict(),
-            'best_prec1': best_accuracy,
-            'optim_state_dict': best_optim
-        }, filename=os.path.join(file_path, f'checkpoint_imp_switch_layer_{layer}_epoch{epoch}.tar'))
-            # torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "models/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
+                'layer': layer,
+                'epoch': epoch + 1,
+                'state_dict': model.state_dict(),
+                'best_prec1': best_accuracy,
+                'optim_state_dict': optimizer.state_dict(),
+                'importance_switches': importance_switches,
+                'losses.val': losses.val,
+                'losses.avg': losses.avg,
+                'losses.sum': losses.sum,
+                'losses.count': losses.count
+        }, filename=os.path.join(file_path, f'checkpoint_imp_switch.tar'))
+        resume = os.path.join(file_path, f'checkpoint_imp_switch.tar')
 
-        print("\n")
-        #write
-        # entry[0]=accuracy; entry[1]=loss
-        # with open(filename, "a+") as file:
-        #     file.write(",".join(map(str, entry))+"\n")
-    return best_accuracy, epoch, best_model, S
 
-
-def train_importance_switches(method, switch_samps, resume, batch_size, workers, lr, epochs, print_freq, device, save_dir):
-    file_path = os.path.join(save_dir, 'importance_switches', method)
-    create_dir_if_not_exists(file_path)
+def train_importance_switches(method, switch_samps, resume, original, batch_size, workers, lr, start_layer, epochs, start_epoch, print_freq, device, save_dir):
     train_loader, val_loader = get_train_valid_loader('./dataset',
                                                     batch_size,
                                                     augment=True,
                                                     random_seed=0,
                                                     num_workers=workers)
-    switch_data={}
-    switch_data['combinationss'] = []
-    switch_data['switches'] = []
-    for layer in vgg.vgg16_hidden_dims.keys():
-        best_accuracy, epoch, best_model, S = train_one_importance_switch(
-                                                                        method=method,
-                                                                        train_loader=train_loader,
-                                                                        val_loader=val_loader,
-                                                                        layer=layer,
-                                                                        switch_samps=switch_samps,
-                                                                        resume=resume,
-                                                                        batch_size=batch_size,
-                                                                        lr=lr,
-                                                                        epochs=epochs,
-                                                                        device=device,
-                                                                        workers=workers,
-                                                                        print_freq=print_freq,
-                                                                        save_dir=save_dir
-                                                                        )
-        print("Rank for switches from most important/largest to smallest after %s " %  str(epochs))
-        print(S)
-        print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
-        ranks_sorted = np.argsort(S.cpu().detach().numpy())[::-1]
-        print(",".join(map(str, ranks_sorted)))
-        switch_data['combinationss'].append(ranks_sorted); switch_data['switches'].append(S.cpu().detach().numpy())
-    print('*'*30)
-    print(switch_data['combinationss'])
-    # combinationss=switch_data['combinationss']
-    file_path=os.path.join(file_path, f"switch_samps_{switch_samps}_epochs_{epochs}")
-    np.save(file_path, switch_data)
+
+    for i in range(vgg.vgg16_hidden_dims_list.index(start_layer), len(vgg.vgg16_hidden_dims)):
+        train_one_importance_switch(
+                                    method=method,
+                                    train_loader=train_loader,
+                                    val_loader=val_loader,
+                                    layer=vgg.vgg16_hidden_dims[i],
+                                    switch_samps=switch_samps,
+                                    resume=resume,
+                                    original=original,
+                                    batch_size=batch_size,
+                                    lr=lr,
+                                    start_epoch=start_epoch,
+                                    epochs=epochs,
+                                    device=device,
+                                    print_freq=print_freq,
+                                    save_dir=save_dir
+                                    )
