@@ -241,7 +241,7 @@ def train_importance_switches(method, switch_samps, resume, original, batch_size
                                                     random_seed=0,
                                                     num_workers=workers)
 
-    for i in range(vgg.vgg16_hidden_dims_list.index(start_layer), len(vgg.vgg16_hidden_dims)):
+    for i in range(list(vgg.vgg16_hidden_dims).index(start_layer), len(vgg.vgg16_hidden_dims)):
         train_one_importance_switch(
                                     method=method,
                                     train_loader=train_loader,
