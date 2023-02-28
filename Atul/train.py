@@ -85,13 +85,11 @@ def train(model_type, save_dir, device, resume, eval, batch_size, workers, lr, m
     criterion = nn.CrossEntropyLoss()
     criterion.to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr,
-                                momentum=momentum,
-                                weight_decay=weight_decay)
+    optimizer = torch.optim.Adam(model.parameters(), lr)
 
     
     for epoch in range(start_epoch, epochs):
-        adjust_learning_rate(optimizer, lr, epoch)
+        # adjust_learning_rate(optimizer, lr, epoch)
 
         # train for one epoch
         train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq, device)
