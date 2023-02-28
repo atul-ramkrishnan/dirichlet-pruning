@@ -136,7 +136,7 @@ def loss_function_dirichlet(prediction, true_y, S, alpha_0, hidden_dim, how_many
 
 
 def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, start_epoch, layer, switch_samps, device, resume, original, batch_size, print_freq, save_dir):
-
+    print(f"=> Training importance switch at layer {layer}")
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
 
