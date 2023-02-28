@@ -185,6 +185,8 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
         annealing_rate = beta_func(epoch)
         model.train()
         for i, (input, labels) in enumerate(train_loader):
+            if i >= 40:             # Only for testing.
+                break
             input, labels = input.to(device), labels.to(device)
             outputs, S = model(input, layer)
             alpha_0 = 2
