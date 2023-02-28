@@ -44,7 +44,8 @@ optional.add_argument('--save-dir',
 optional.add_argument("--switch_samps", default=150, type=int)
 optional.add_argument("--start-layer", default="conv1", type=str, metavar='L', 
                       help='resume training importance switches from layer L')
-optional.add_argument("--create-bkp", default=True, type=bool, action='store_true')
+optional.add_argument("--create-bkp", action='store_true',
+                      help='Creates backup of checkpoints during imp switch training (default: True)')
 
 
 def main():
