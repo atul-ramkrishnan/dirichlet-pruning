@@ -20,6 +20,8 @@ parser.add_argument('--workers', default=2, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 optional.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
+optional.add_argument('--original', default='', type=str, metavar='PATH',
+                      help='path to original model checkpoint (default: none)')
 optional.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 optional.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
@@ -40,6 +42,8 @@ optional.add_argument('--save-dir',
                     help='The directory used to save the trained models',
                     default='saved', type=str)
 optional.add_argument("--switch_samps", default=150, type=int)
+optional.add_argument("--start-layer", default="conv1", type=str, metavar='L', 
+                      help='resume training importance switches from layer L')
 
 
 def main():
@@ -66,14 +70,18 @@ def main():
 
     elif args.mode == "train_importance_switches":
         print(f"Training the importance switches using the \"{args.method}\" method...")
+
         train_importance_switches(
                                 method=args.method,
                                 switch_samps=args.switch_samps,
                                 device=device,
+                                original=args.original,
                                 resume=args.resume,
                                 batch_size=args.batch_size,
                                 workers=args.workers,
                                 lr=args.lr,
+                                start_layer=args.start_layer,
+                                start_epoch=args.start_epoch,
                                 epochs=args.epochs,
                                 print_freq=args.print_freq,
                                 save_dir=args.save_dir
