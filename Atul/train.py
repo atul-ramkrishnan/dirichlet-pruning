@@ -9,6 +9,7 @@ import vgg
 from dataloader import get_train_valid_loader
 from util import AverageMeter, save_checkpoint, create_dir_if_not_exists, Method
 from evaluate import evaluate, evaluate_switch_at_layer, accuracy
+import shutil
 
 
 def adjust_learning_rate(optimizer, lr, epoch):
@@ -135,10 +136,13 @@ def loss_function_dirichlet(prediction, true_y, S, alpha_0, hidden_dim, how_many
     return cross_entropy + annealing_rate * KLD / how_many_samps
 
 
-def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, start_epoch, layer, switch_samps, device, resume, original, batch_size, print_freq, save_dir):
+def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, start_epoch, layer, switch_samps, device, resume, original, batch_size, print_freq, save_dir, create_bkp):
     print(f"=> Training importance switch at layer {layer}")
     file_path = os.path.join(save_dir, 'models', method)
     create_dir_if_not_exists(file_path)
+    if create_bkp:
+        file_path_bkp = os.path.join(save_dir, 'models', method, 'backup')
+        create_dir_if_not_exists(file_path_bkp)
 
     if method == "dirichlet":
         method = Method.DIRICHLET
@@ -228,11 +232,14 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
                 'best_prec1': best_accuracy,
                 'optim_state_dict': optimizer.state_dict(),
                 'importance_switches': importance_switches,
-        }, filename=os.path.join(file_path, f'checkpoint_imp_switch.tar'))
-        resume = os.path.join(file_path, f'checkpoint_imp_switch.tar')
+        }, filename=os.path.join(file_path, f'checkpoint_imp_switch_latest.tar'))
+        resume = os.path.join(file_path, f'checkpoint_imp_switch_latest.tar')
+
+        if create_bkp:
+            shutil.copy(resume, file_path_bkp + 'bkp_checkpoint_imp_switch_' + 'layer_' + layer + 'epoch_' + epoch + '.tar')
 
 
-def train_importance_switches(method, switch_samps, resume, original, batch_size, workers, lr, start_layer, epochs, start_epoch, print_freq, device, save_dir):
+def train_importance_switches(method, switch_samps, resume, original, batch_size, workers, lr, start_layer, epochs, start_epoch, print_freq, device, save_dir, create_bkp):
     train_loader, val_loader = get_train_valid_loader('./dataset',
                                                     batch_size,
                                                     augment=True,
@@ -240,6 +247,8 @@ def train_importance_switches(method, switch_samps, resume, original, batch_size
                                                     num_workers=workers)
     vgg16_hidden_dims_list = list(vgg.vgg16_hidden_dims)
     for i in range(vgg16_hidden_dims_list.index(start_layer), len(vgg.vgg16_hidden_dims)):
+        if i > vgg16_hidden_dims_list.index(start_layer):
+            start_epoch = 0
         train_one_importance_switch(
                                     method=method,
                                     train_loader=train_loader,
@@ -254,5 +263,6 @@ def train_importance_switches(method, switch_samps, resume, original, batch_size
                                     epochs=epochs,
                                     device=device,
                                     print_freq=print_freq,
-                                    save_dir=save_dir
+                                    save_dir=save_dir,
+                                    create_bkp=create_bkp
                                     )

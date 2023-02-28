@@ -44,6 +44,7 @@ optional.add_argument('--save-dir',
 optional.add_argument("--switch_samps", default=150, type=int)
 optional.add_argument("--start-layer", default="conv1", type=str, metavar='L', 
                       help='resume training importance switches from layer L')
+optional.add_argument("--create-bkp", default=True, type=bool, action='store_true')
 
 
 def main():
@@ -84,7 +85,8 @@ def main():
                                 start_epoch=args.start_epoch,
                                 epochs=args.epochs,
                                 print_freq=args.print_freq,
-                                save_dir=args.save_dir
+                                save_dir=args.save_dir,
+                                create_bkp=args.create_bkp
                                 )
     elif args.mode == "prune_and_retrain":
         print("Pruning and retraining...")
