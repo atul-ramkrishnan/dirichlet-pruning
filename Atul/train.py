@@ -163,8 +163,6 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
         checkpoint = torch.load(resume)
         model.load_state_dict(checkpoint['state_dict'], strict=True)
         optimizer.load_state_dict(checkpoint['optim_state_dict'])
-        print("=> loaded checkpoint '{}' (epoch {})"
-                .format(eval, checkpoint['epoch']))
 
     elif os.path.isfile(original):
         print("=> importance switch training from scratch")
@@ -218,7 +216,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
             print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
             print("Best updated")
             if os.path.isfile(resume):
-                print("=> loading checkpoint '{}'".format(resume))
+                print("=> overwriting checkpoint'{}'".format(resume))
                 checkpoint = torch.load(resume)
                 importance_switches = checkpoint['importance_switches']
             else:
