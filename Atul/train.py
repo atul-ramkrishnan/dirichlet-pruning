@@ -153,7 +153,6 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
     elif method == Method.GENERALIZED_DIRICHLET:
         pass
 
-    losses = AverageMeter()
     if os.path.isfile(resume):
         print("=> resuming importance switch training")
         print("=> loading checkpoint '{}'".format(resume))
@@ -180,8 +179,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
 
     for epoch in range(start_epoch, epochs):
         print(f"<--------------------------------------Begin Epoch {epoch}-------------------------------------->")
-        if os.path.isfile(resume):
-            losses.restore(checkpoint['losses.val'], checkpoint['losses.avg'], checkpoint['losses.sum'], checkpoint['losses.count'])
+        losses = AverageMeter()
         annealing_rate = beta_func(epoch)
         model.train()
         for i, (input, labels) in enumerate(train_loader):
@@ -199,7 +197,8 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
                 print(f"Epoch: [{epoch}] [{i}/{len(train_loader)}]\t", end='')
                 print(f"Average loss over {print_freq} batches: {losses.avg}")
                 losses.reset()
-        print(f"Accuracy at end of epoch {epoch}", evaluate_switch_at_layer(val_loader, model, layer, device))
+        acc = evaluate_switch_at_layer(val_loader, model, layer, device)
+        print(f"Accuracy at end of epoch {epoch}", acc)
 
         print("Importance switches learned posteriors:")
         print(S)
@@ -207,7 +206,7 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
         print(torch.argsort(S))
         print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
 
-        is_best = accuracy > best_accuracy
+        is_best = acc > best_accuracy
         best_accuracy = max(accuracy, best_accuracy)
         if is_best:
             print("Rank for switches from most important/largest to smallest after %s " %  str(epochs))
@@ -229,10 +228,6 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
                 'best_prec1': best_accuracy,
                 'optim_state_dict': optimizer.state_dict(),
                 'importance_switches': importance_switches,
-                'losses.val': losses.val,
-                'losses.avg': losses.avg,
-                'losses.sum': losses.sum,
-                'losses.count': losses.count
         }, filename=os.path.join(file_path, f'checkpoint_imp_switch.tar'))
         resume = os.path.join(file_path, f'checkpoint_imp_switch.tar')
 
