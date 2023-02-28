@@ -240,13 +240,13 @@ def train_importance_switches(method, switch_samps, resume, original, batch_size
                                                     augment=True,
                                                     random_seed=0,
                                                     num_workers=workers)
-
-    for i in range(list(vgg.vgg16_hidden_dims).index(start_layer), len(vgg.vgg16_hidden_dims)):
+    vgg16_hidden_dims_list = list(vgg.vgg16_hidden_dims)
+    for i in range(vgg16_hidden_dims_list.index(start_layer), len(vgg.vgg16_hidden_dims)):
         train_one_importance_switch(
                                     method=method,
                                     train_loader=train_loader,
                                     val_loader=val_loader,
-                                    layer=vgg.vgg16_hidden_dims[i],
+                                    layer=vgg16_hidden_dims_list[i],
                                     switch_samps=switch_samps,
                                     resume=resume,
                                     original=original,
