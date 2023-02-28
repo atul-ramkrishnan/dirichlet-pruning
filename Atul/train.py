@@ -22,8 +22,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
     """
         Run one train epoch
     """
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
 
@@ -32,10 +30,6 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
 
     end = time.time()
     for i, (input, target) in enumerate(train_loader):
-
-        # measure data loading time
-        data_time.update(time.time() - end)
-
         input = input.to(device)
         target = target.to(device)
 
@@ -55,18 +49,11 @@ def train_one_epoch(train_loader, model, criterion, optimizer, epoch, print_freq
         losses.update(loss.item(), input.size(0))
         top1.update(prec1.item(), input.size(0))
 
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
         if i % print_freq == 0:
             print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
-                      epoch, i, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=losses, top1=top1))
+                      epoch, i, len(train_loader), loss=losses, top1=top1))
 
 
 
@@ -209,14 +196,14 @@ def train_one_importance_switch(method, train_loader, val_loader, lr, epochs, st
             optimizer.step()
             losses.update(loss.item(), input.size(0))
             if i % print_freq == 0:
-               print (i)
-               print (losses.avg)
-               losses.reset()
+                print(f"Epoch: [{epoch}] [{i}/{len(train_loader)}]\t", end='')
+                print(f"Average loss over {print_freq} batches: {losses.avg}")
+                losses.reset()
         print(f"Accuracy at end of epoch {epoch}", evaluate_switch_at_layer(val_loader, model, layer, device))
 
-        print("S")
+        print("Importance switches learned posteriors:")
         print(S)
-        print("Channels from most important to least important")
+        print("Switches from most important to least important:")
         print(torch.argsort(S))
         print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
 
