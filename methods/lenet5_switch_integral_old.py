@@ -175,7 +175,7 @@ class Lenet(nn.Module):
 
 
         #############S
-        phi = f.softplus(self.parameter)
+        phi = f.relu(self.parameter)
 
         """ draw Gamma RVs using phi and 1 """
         num_samps = self.num_samps_for_switch
@@ -426,7 +426,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     criterion = nn.CrossEntropyLoss()
 
     trainable_parameters = [net2.parameter]
-    optimizer = optim.Adam(trainable_parameters, lr=0.1)
+    optimizer = optim.Adam(trainable_parameters, lr=0.001)
 
     print(path)
     net2.load_state_dict(torch.load(path)['model_state_dict'], strict=False)
