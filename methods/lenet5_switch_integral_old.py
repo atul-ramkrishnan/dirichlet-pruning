@@ -481,6 +481,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     stop=0; epoch=0; best_accuracy=0; entry=np.zeros(3); best_model=-1
     # while (stop<early_stopping):
     for epochs in range(epochs_num):
+        print(net2.c1.weight.data)
         epoch=epoch+1
         losses = AverageMeter()
         annealing_rate = beta_func(epoch)
