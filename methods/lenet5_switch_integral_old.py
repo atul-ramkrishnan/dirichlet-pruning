@@ -140,7 +140,7 @@ class Lenet(nn.Module):
 
         self.drop_layer = nn.Dropout(p=0.5)
 
-        self.parameter = Parameter(-1*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
+        self.parameter = Parameter(0.3133*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
         self.num_samps_for_switch = num_samps_for_switch
 
     def switch_func(self, output, SstackT):
