@@ -380,6 +380,7 @@ def get_ranks(method, path_checkpoint):
         file_path=os.path.join(path_main, 'methods/results/switch_data_%s_9927_integral_samps_%s_epochs_%i.npy' % (dataset, str(num_samps_for_switch), epochs_num))
         if getranks_method=='train':
             for layer in ["c1", "c3", "c5", "f6"]:
+                switch_layer_data = {}
                 best_accuracy, epoch, best_model, S = run_experiment_integral_old(epochs_num, layer, 10, 20, 100, 25, num_samps_for_switch, path_checkpoint)
                 print("Rank for switches from most important/largest to smallest after %s " %  str(epochs_num))
                 print(S)
@@ -387,6 +388,9 @@ def get_ranks(method, path_checkpoint):
                 ranks_sorted = np.argsort(S.cpu().detach().numpy())[::-1]
                 print(",".join(map(str, ranks_sorted)))
                 switch_data['combinationss'].append(ranks_sorted); switch_data['switches'].append(S.cpu().detach().numpy())
+                switch_layer_data[layer] = ranks_sorted
+                file_path_layer = os.path.join(path_main, f'methods/results/switch_data_{dataset}_integral_samps_{num_samps_for_switch}_epochs_{epochs_num}_layer_{layer}')
+                np.save(file_path_layer, switch_layer_data)
             print('*'*30)
             print(switch_data['combinationss'])
             combinationss=switch_data['combinationss']
