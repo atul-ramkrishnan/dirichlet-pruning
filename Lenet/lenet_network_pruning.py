@@ -345,7 +345,7 @@ def get_ranks(method, path_checkpoint):
 
 
     elif method=="switch_integral":
-
+        print("Heyooo")
         #train or load
         getranks_method = args.switch_comb
         switch_data={}; switch_data['combinationss'] = []; switch_data['switches']=[]
