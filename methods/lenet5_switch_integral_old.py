@@ -425,7 +425,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     net2 = Lenet(nodesNum1, nodesNum2, nodesFc1, nodesFc2, layer, num_samps_for_switch).to(device)
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = optim.Adam(net2.parameters(), lr=0.001)
+    optimizer = optim.SGD(net2.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
 
     print(path)
     net2.load_state_dict(torch.load(path)['model_state_dict'], strict=False)
