@@ -425,7 +425,8 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     net2 = Lenet(nodesNum1, nodesNum2, nodesFc1, nodesFc2, layer, num_samps_for_switch).to(device)
     criterion = nn.CrossEntropyLoss()
 
-    optimizer = optim.SGD(net2.parameters(), lr=0.001, momentum=0.9, weight_decay=5e-4)
+    trainable_parameters = [net2.parameter]
+    optimizer = optim.Adam(trainable_parameters, lr=0.001)
 
     print(path)
     net2.load_state_dict(torch.load(path)['model_state_dict'], strict=False)
@@ -482,6 +483,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
     # while (stop<early_stopping):
     for epochs in range(epochs_num):
         print(net2.c1.weight.data)
+        print(net2.c1.bias.data)
         epoch=epoch+1
         losses = AverageMeter()
         annealing_rate = beta_func(epoch)
