@@ -175,7 +175,8 @@ class Lenet(nn.Module):
 
 
         #############S
-        phi = f.relu(self.parameter)
+        # phi = f.softplus(self.parameter)
+        phi = torch.max(0.001, self.parameter)
 
         """ draw Gamma RVs using phi and 1 """
         num_samps = self.num_samps_for_switch
