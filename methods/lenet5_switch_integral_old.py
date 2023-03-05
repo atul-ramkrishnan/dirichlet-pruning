@@ -56,7 +56,7 @@ layer="c1"
 how_many_epochs=200
 annealing_steps = float(8000. * how_many_epochs)
 beta_func = lambda s: min(s, annealing_steps) / annealing_steps
-alpha_0 = 2  # below 1 so that we encourage sparsity
+alpha_0 = 0.5  # below 1 so that we encourage sparsity
 hidden_dim = 10 #it's a number of parameters we want to estimate, e.g. # conv1 filters
 hidden_dims={'c1': conv1, 'c3': conv2, 'c5': fc1, 'f6' : fc2}
 hidden_dim = hidden_dims[layer] #it's a number of parameters we want to estimate, e.g. # conv1 filters
@@ -140,7 +140,7 @@ class Lenet(nn.Module):
 
         self.drop_layer = nn.Dropout(p=0.5)
 
-        self.parameter = Parameter(0.3133*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
+        self.parameter = Parameter(0.5*torch.ones(hidden_dims[layer]),requires_grad=True) # this parameter lies #S
         self.num_samps_for_switch = num_samps_for_switch
 
     def switch_func(self, output, SstackT):
