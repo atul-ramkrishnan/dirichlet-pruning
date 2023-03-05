@@ -70,25 +70,25 @@ dataset="mnist"
 trainval_perc=1
 BATCH_SIZE = 100
 
-trainval_dataset=datasets.MNIST('data', train=True, download=True,
-                    #transform=transforms.Compose([transforms.ToTensor(),
-                    #transforms.Normalize((0.1307,), (0.3081,))]),
-                    transform=transforms.ToTensor())
+# trainval_dataset=datasets.MNIST('data', train=True, download=True,
+#                     #transform=transforms.Compose([transforms.ToTensor(),
+#                     #transforms.Normalize((0.1307,), (0.3081,))]),
+#                     transform=transforms.ToTensor())
 
-train_size = int(trainval_perc * len(trainval_dataset))
-val_size = len(trainval_dataset) - train_size
-train_dataset, val_dataset = torch.utils.data.random_split(trainval_dataset, [train_size, val_size])
+# train_size = int(trainval_perc * len(trainval_dataset))
+# val_size = len(trainval_dataset) - train_size
+# train_dataset, val_dataset = torch.utils.data.random_split(trainval_dataset, [train_size, val_size])
 
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-#val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
+# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
+# #val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-# Same for test data
-test_loader = torch.utils.data.DataLoader(
-    #datasets.MNIST('data', train=False, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])),
-    datasets.MNIST('data', train=False, transform=transforms.ToTensor()),
-    batch_size=BATCH_SIZE, shuffle=False)
+# # Same for test data
+# test_loader = torch.utils.data.DataLoader(
+#     #datasets.MNIST('data', train=False, transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])),
+#     datasets.MNIST('data', train=False, transform=transforms.ToTensor()),
+#     batch_size=BATCH_SIZE, shuffle=False)
 
-dataset="mnist"
+# dataset="mnist"
 
 train_loader, test_loader, val_loader = load_fashionmnist(BATCH_SIZE, 1.0)
 
