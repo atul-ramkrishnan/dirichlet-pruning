@@ -170,8 +170,6 @@ def evaluate(net=net, evaluation="test"):
     #     print(name)
     #     print(param)
     # print(f'\nEvaluating model on {evaluation} dataset')
-    print("<><><><><><><><><><>")
-    print(net.f6.bias.data)
     net.eval()
     correct = 0
     total = 0
