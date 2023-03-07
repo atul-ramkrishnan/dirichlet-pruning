@@ -322,7 +322,7 @@ def get_ranks(method, path_checkpoint):
     elif method == 'softmax':
         getranks_method = args.switch_comb
         switch_data = {}
-        switch_data['combinations'] = []
+        switch_data['combinationss'] = []
         switch_init = args.switch_init
         n_epochs = args.n_epochs
 
