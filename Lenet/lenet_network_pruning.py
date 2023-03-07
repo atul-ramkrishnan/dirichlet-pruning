@@ -339,6 +339,7 @@ def get_ranks(method, path_checkpoint):
             print('*'*30)
             print(switch_data['combinationss'])
             np.save(file_path, switch_data)
+            combinationss = switch_data['combinationss']
         elif getranks_method=='load':
             combinationss=list(np.load(file_path,  allow_pickle=True).item()['combinationss'])
 
