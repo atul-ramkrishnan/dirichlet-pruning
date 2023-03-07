@@ -226,10 +226,9 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             inputs, labels=inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs, switches = net2(inputs, layer)
-            print(outputs.shape)
-            print(switches.shape)
+
             hidden_dim = hidden_dims[layer]
-            loss = f.cross_entropy(outputs, switches)
+            loss = f.cross_entropy(outputs, labels)
             loss.backward()
             losses.update(loss.item(), inputs.size(0))
             optimizer.step()
