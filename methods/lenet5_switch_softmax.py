@@ -254,7 +254,7 @@ def run_experiment(epochs_num, layer, nodesNum1, nodesNum2, nodesFc1, nodesFc2, 
             best_optim=optimizer.state_dict()
             # print(os.getcwd())
             # Hardcoded filepath for now. Fix later
-            torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "./checkpoint/prune_and_retrain/mnist/switch_integral_softmax/prune/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
+            torch.save({'model_state_dict' : best_model, 'optimizer_state_dict': best_optim}, "./checkpoint/prune_and_retrain/fashionmnist/softmax/prune/%s_conv:%d_conv:%d_fc:%d_fc:%d_rel_bn_drop_trainval_modelopt%.1f_epo:%d_acc:%.2f" % (dataset, conv1, conv2, fc1, fc2, trainval_perc, epoch, best_accuracy))
 
         print("\n")
     return best_accuracy, epoch, best_model, switches
