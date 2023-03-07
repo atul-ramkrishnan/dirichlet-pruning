@@ -318,6 +318,7 @@ def get_ranks(method, path_checkpoint):
         combinationss = [np.random.permutation(nodesNum1), np.random.permutation(nodesNum2),
                          np.random.permutation(nodesFc1), np.random.permutation(nodesFc2)]
     elif method == 'softmax':
+        getranks_method = args.switch_comb
         switch_data = {}
         switch_data['combinations'] = []
         switch_init = args.switch_init
