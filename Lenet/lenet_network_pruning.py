@@ -46,6 +46,9 @@ arguments.add_argument("--trainval_perc", default=1.0, type=float)
 arguments.add_argument("--resume", default=0, type=int)
 arguments.add_argument("--prune_bool", default=0, type=int)
 arguments.add_argument("--retrain", default=0, type=int)
+arguments.add_argument('--switch_init', default=0.5, type=float)
+arguments.add_argument('--n_epochs', default=10, type=int)
+
 
 arguments.add_argument("--path_checkpoint_load", default=
 #"checkpoint/scratch/mnist/mnist_trainval_0.8_epo_473_acc_99.07")
@@ -314,6 +317,28 @@ def get_ranks(method, path_checkpoint):
     if method == 'random':
         combinationss = [np.random.permutation(nodesNum1), np.random.permutation(nodesNum2),
                          np.random.permutation(nodesFc1), np.random.permutation(nodesFc2)]
+    elif method == 'softmax':
+        switch_data = {}
+        switch_data['combinations'] = []
+        switch_init = args.switch_init
+        n_epochs = args.n_epochs
+
+        file_path=os.path.join(path_main, f'methods/results/softmax/switch_data_{dataset}_switch_init_{switch_init}_n_epochs_{n_epochs}.npy')
+        if getranks_method == "train":
+            for layer in ["c1", "c3", "c5", "f6"]:
+                best_accuracy, epoch, best_model, S = run_experiment_integral(n_epochs, layer, 10, 20, 100, 25, switch_init, path_checkpoint)
+                print("Rank for switches from most important/largest to smallest after %s " %  str(n_epochs))
+                print(S)
+                print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
+                ranks_sorted = np.argsort(S.cpu().detach().numpy())[::-1]
+                print(",".join(map(str, ranks_sorted)))
+                switch_data['combinationss'].append(ranks_sorted)
+            print('*'*30)
+            print(switch_data['combinationss'])
+            np.save(file_path, switch_data)
+        elif getranks_method=='load':
+            combinationss=list(np.load(file_path,  allow_pickle=True).item()['combinationss'])
+
 
     elif method == 'fisher':
 
