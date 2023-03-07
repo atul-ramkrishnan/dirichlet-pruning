@@ -107,6 +107,8 @@ from methods import shapley_rank
 from methods.lenet5_switch_integral import run_experiment as run_experiment_integral
 from methods.lenet5_switch_integral_old import run_experiment as run_experiment_integral_old
 from methods.lenet5_switch_pointest import run_experiment as run_experiment_pointest
+from methods.lenet5_switch_softmax import run_experiment as run_experiment_softmax
+
 from importlib.machinery import SourceFileLoader
 dataset_mnist = SourceFileLoader("module_mnist", "../dataloaders/dataset_mnist.py").load_module()
 dataset_fashionmnist = SourceFileLoader("module_fashionmnist", "../dataloaders/dataset_fashionmnist.py").load_module()
@@ -327,7 +329,7 @@ def get_ranks(method, path_checkpoint):
         file_path=os.path.join(path_main, f'methods/results/softmax/switch_data_{dataset}_switch_init_{switch_init}_n_epochs_{n_epochs}.npy')
         if getranks_method == "train":
             for layer in ["c1", "c3", "c5", "f6"]:
-                best_accuracy, epoch, best_model, S = run_experiment_integral(n_epochs, layer, 10, 20, 100, 25, switch_init, path_checkpoint)
+                best_accuracy, epoch, best_model, S = run_experiment_softmax(n_epochs, layer, 10, 20, 100, 25, switch_init, path_checkpoint)
                 print("Rank for switches from most important/largest to smallest after %s " %  str(n_epochs))
                 print(S)
                 print("max: %.4f, min: %.4f" % (torch.max(S), torch.min(S)))
