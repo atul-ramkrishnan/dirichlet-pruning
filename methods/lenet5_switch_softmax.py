@@ -44,7 +44,7 @@ verbose = False                  # Print additional info
 # DATA
 BATCH_SIZE = 100
 dataset = "fashionmnist"
-
+trainval_perc = 1
 train_loader, test_loader, val_loader = load_fashionmnist(BATCH_SIZE, 1.0)
 
 ##############################################################################
