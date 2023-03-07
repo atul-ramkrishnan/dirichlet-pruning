@@ -93,12 +93,12 @@ class Lenet(nn.Module):
         self.drop_layer = nn.Dropout(p=0.5)
         self.parameter_switch = Parameter(switch_init*torch.ones(hidden_dims[layer]),requires_grad=True)
     
-    def switch_func_softmax(inputs, switch):
+    def switch_func_softmax(self, inputs, switch):
         rep = switch.unsqueeze(1).unsqueeze(1).repeat(1, inputs.shape[2], inputs.shape[3])
         output = torch.mul(rep, inputs)
         return output
         
-    def switch_func_fc_softmax(inputs, switch):
+    def switch_func_fc_softmax(self, inputs, switch):
         output = torch.mul(inputs, switch)
         return output
     
