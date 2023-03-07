@@ -104,10 +104,10 @@ class Lenet(nn.Module):
     
 
     def forward(self, x, layer):
-
         switch = f.softmax(self.parameter_switch, dim=0)
+        output=self.c1(x)
         if layer == 'c1':
-             output, Sprime = self.switch_func_softmax(output, switch)
+             output = self.switch_func_softmax(output, switch)
 
         output=f.relu(self.s2(output))
         output=self.bn1(output)
@@ -115,8 +115,7 @@ class Lenet(nn.Module):
         output=self.c3(output)
 
         if layer == 'c3':
-            output, SstackT = self.switch_func_softmax(output, switch)
-
+            output = self.switch_func_softmax(output, switch)
 
         output=f.relu(self.s4(output))
         output=self.bn2(output)
@@ -126,12 +125,12 @@ class Lenet(nn.Module):
         output=self.c5(output)
 
         if layer == 'c5':
-            output, SstackT = self.switch_func_fc_softmax(output, switch)
+            output = self.switch_func_fc_softmax(output, switch)
 
         output=self.f6(output)
 
         if layer == 'f6':
-            output, SstackT = self.switch_func_fc_softmax(output, switch)
+            output = self.switch_func_fc_softmax(output, switch)
 
         output = self.f7(output)
         return output, switch
